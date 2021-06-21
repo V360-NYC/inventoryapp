@@ -1,0 +1,1 @@
+gcloud functions deploy onInventoryUpload --runtime python38 --trigger-resource dinsight-user-inventory --trigger-event google.storage.object.finalize 
