@@ -5,15 +5,19 @@ import createNotification from '../../util/Notification';
 import {connect} from 'react-redux';
 
 const SendEmailModal = (props) => {
-    const {userID, handleClose, show} = props;
+    const {userID, handleClose, show, path} = props;
     const [email, setEmail] = useState('');
     const [subject, setSubject] = useState('');
 
     const handleSubmit = () => {
-        if(email.length === 0)return;
+        if(email.length === 0 || subject.length == 0){
+            createNotification('Email address and subject required !!', 'error');
+            return;
+        }
 
         postQuery(`emailRequests/${userID}`, {
             email,
+            path,
             subject
         })
         .then(response => {
@@ -63,6 +67,7 @@ const SendEmailModal = (props) => {
                                         value={subject}
                                     />
                                 </div>
+                                {props.children}
                             
                         </div>
                     </div>

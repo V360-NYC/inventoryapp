@@ -12,22 +12,9 @@ class MessageDetail extends React.Component{
                 columns : [],
                 rows : []
             }
+            
 
-            if(typeof(this.props.searchResult[0]) === 'object'){
-                var dataColumns = [];
-                if(this.props.searchResult.length > 0){
-                    dataColumns = Object.keys(this.props.searchResult[0]).map(key => {
-                        return {label : key,field : key,width : 50}
-                    });
-                }
-
-                const dataRows = this.props.searchResult;
-
-                data.columns = dataColumns;
-                data.rows = dataRows;
-            }
-            else{
-
+            if(this.props.searchResult[0] instanceof Array){
                 const dataColumns = this.props.searchResult[0].map(label => {
                     return {
                         label,
@@ -47,10 +34,28 @@ class MessageDetail extends React.Component{
                     });
                     return tuple
                 })
-    
+                
                 data.columns = dataColumns;
                 data.rows = dataRows;
             }
+            else{
+
+                
+                var dataColumns = [];
+                if(this.props.searchResult.length > 0){
+                    dataColumns = Object.keys(this.props.searchResult[0]).map(key => {
+                        return {label : key,field : key,width : 50}
+                    });
+                }
+
+                const dataRows = this.props.searchResult;
+
+                
+                data.columns = dataColumns;
+                data.rows = dataRows;
+            }
+
+            console.log(data)
             
             return (
                 <DataTable data={data} />

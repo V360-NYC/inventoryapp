@@ -15,3 +15,18 @@ export const loadMessages = (path) => {
     })
     
 }
+
+export const addFileMetaData = (collectionName, docID, data) => {
+    return firestoreDB.collection(collectionName).doc(docID)
+            .update(data)
+}
+
+export const getUserVendors = (uid) => {
+    return firestoreDB.collection(`userVendors`).where('userID','==',uid).get()
+    .then(response => {
+        return response.docs.map(doc => {
+            return doc.data();
+        })
+    })
+    .catch(err=>err)
+}

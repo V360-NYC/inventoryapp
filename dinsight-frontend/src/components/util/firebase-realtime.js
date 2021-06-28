@@ -10,3 +10,8 @@ export const loadMessages = (path, callback) => {
     })
     
 }
+
+export const getFiles = async (path) => {
+    const items = await realtimeDB.ref(path).get();
+    console.log(items.val());
+}

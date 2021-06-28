@@ -12,3 +12,10 @@ export const postMessage = (message) => {
         payload: message
     }
 }
+
+export const addUserVendor = (vendor) => {
+    return {
+        type : 'ADD_VENDOR',
+        payload : vendor
+    }
+}

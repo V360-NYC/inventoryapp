@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "dinsightmessenger",
+    "default": "kp-assist",
     "testing": "vertical-veld-315508"
   },
   "targets": {

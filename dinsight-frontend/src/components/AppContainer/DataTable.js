@@ -14,6 +14,8 @@ class DataTable extends React.Component{
                 <MDBDataTableV5 
                     small
                     searchTop
+                    bordered
+                    striped
                     responsive
                     searchBottom={false}
                     data={this.props.data} 

@@ -20,7 +20,15 @@ const messagesReducer = (messages = [], action) => {
     return messages;
 }
 
+const vendorsReducer = (vendors = [], action) => {
+    if(action.type === 'ADD_VENDOR'){
+        return [...vendors, action.payload];
+    }
+    return vendors
+}
+
 export default combineReducers({
     user:AuthStateReducer,
-    messages: messagesReducer
+    messages: messagesReducer,
+    vendors : vendorsReducer
 });
