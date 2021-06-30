@@ -31,13 +31,14 @@ export const getUserVendors = (uid) => {
     .catch(err=>err)
 }
 
-export const getUserFiles = (path, callback) => {
-    firestoreDB.collection(path)
+export const getUserFiles = (userID, type, callback, middleware = (files) => {}) => {
+    firestoreDB.collection(`userFiles/${userID}/${type}`).orderBy('createdAt','desc')
     .onSnapshot(changes => {
         const files = changes.docChanges().map(change => {
             return change.doc.data();
         })
-
+        
+        if(typeof(middleware) === 'function')middleware(files)
         callback(files)
     })
 }

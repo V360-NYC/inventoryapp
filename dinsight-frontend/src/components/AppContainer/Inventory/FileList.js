@@ -23,14 +23,14 @@ class FileList extends React.Component{
         selectedFile : null
     }
 
-    showModal = (type, modified_at, path) => {
+    showModal = (type, createdAt, filePath) => {
 
         this.setState({
             show:true,
             selectedFile : {
                 type,
-                modified_at,
-                path
+                createdAt,
+                filePath
             }
         })
     }
@@ -45,10 +45,7 @@ class FileList extends React.Component{
             day : '2-digit',
             weekday : 'short',
             month:'long',
-            year : 'numeric',
-            hour:'2-digit',
-            minute:'2-digit',
-            hour12: true
+            year : 'numeric'
         });
 
         const columns = [
@@ -64,11 +61,12 @@ class FileList extends React.Component{
             }
         ]
 
-        const rows = this.props.data.map(({modified_at, url, type, path}) => {
+        const rows = this.props.data.map(({createdAt, downloadURL, type, filePath}) => {
+            const date = new Date(createdAt.toDate());
             return {
                 file : (
                     <>
-                        <FontAwesomeIcon icon={faFileExcel} size='2x' style={{color:'gray'}}/> {'\u00A0'}{'\u00A0'} {datetimeConstructor.format(modified_at)}
+                        <FontAwesomeIcon icon={faFileExcel} size='2x' style={{color:'gray'}}/> {'\u00A0'}{'\u00A0'} {datetimeConstructor.format(date)}
                     </>
                 ),
                 action : (
@@ -76,13 +74,13 @@ class FileList extends React.Component{
                         <div className="d-flex">
                             <div className="d-inline-block px-2">
                                 <MDBTooltip domElement tag="span" placement="top">
-                                    <a onClick={() => this.showModal(type,datetimeConstructor.format(modified_at), path)}><span className="text-primary"> <FontAwesomeIcon icon={faEnvelopeOpen} size='2x'/></span></a>
+                                    <a onClick={() => this.showModal(type,datetimeConstructor.format(date), filePath)}><span className="text-primary"> <FontAwesomeIcon icon={faEnvelopeOpen} size='2x'/></span></a>
                                     <span>Send via email</span>         
                                 </MDBTooltip>
                             </div>
                             <div className="d-inline-block px-2">
                                 <MDBTooltip domElement tag="span" placement="top">
-                                    <a href={url} target="_blank"><span className="text-primary"> <FontAwesomeIcon icon={faCloudDownloadAlt} size='2x'/></span></a>
+                                    <a href={downloadURL} target="_blank"><span className="text-primary"> <FontAwesomeIcon icon={faCloudDownloadAlt} size='2x'/></span></a>
                                     <span>Download File to this device.</span>
 
                                 </MDBTooltip>
@@ -98,61 +96,19 @@ class FileList extends React.Component{
             rows
         }
 
-        return this.props.data.map(({modified_at, url, type, path}) => {
-            
-            return (
-                <tr>
-                    
-                    <td>
-                        <FontAwesomeIcon icon={faFileExcel} size='2x' style={{color:'gray'}}/> {'\u00A0'}{'\u00A0'} {datetimeConstructor.format(modified_at)}
-                    </td>
-                    <td>
-                        <div className="d-inline-block px-3">
-                            <MDBTooltip domElement tag="span" placement="top">
-                                <a onClick={() => this.showModal(type,datetimeConstructor.format(modified_at), path)}><span className="text-primary"> <FontAwesomeIcon icon={faEnvelopeOpen} size='2x'/></span></a>
-                                <span>Send via email</span>
-
-                               
-                            </MDBTooltip>
-                        </div>
-                        <div className="d-inline-block px-3">
-                        <MDBTooltip domElement tag="span" placement="top">
-                                <a href={url} target="_blank"><span className="text-primary"> <FontAwesomeIcon icon={faCloudDownloadAlt} size='2x'/></span></a>
-                                <span>Download File to this device.</span>
-
-                            </MDBTooltip>
-                        </div>
-                    </td>
-                </tr>
-            )
-        })
-
-       
+        
     }
 
     renderOutput() {
         if(this.props.data.length === 0){
             return (
-                    <div className="p-3" style={{height:'10%'}}>
-                        <div className="container d-flex justify-content-center" style={{paddingTop:'10%'}}>
-                            <LoadingSpinner  />
-                        </div>
+                    <div className="p-3 text-center" style={{height:'10%'}}>
+                        No files to display.
                     </div>
             );
         }
         else {
             return (
-                // <MDBTable >
-                //     <MDBTableHead >
-                //         <tr>
-                //             <th className="h6">Last Modified</th>
-                //             <th className="h6">Actions</th>
-                //         </tr>
-                //     </MDBTableHead>
-                //     <MDBTableBody>
-                //         {this.renderTableBody()}
-                //     </MDBTableBody>
-                // </MDBTable>
                 <MDBDataTableV5 
                     data={this.renderTableBody()} 
                     searching={false} 
@@ -169,7 +125,7 @@ class FileList extends React.Component{
 
     renderFileInfo = () => {
         if(this.state.selectedFile){
-            // console.log(this.state.selectedFile.type, this.state.selectedFile.modified_at)
+            // console.log(this.state.selectedFile.type, this.state.selectedFile.createdAt)
             return (
                 <div className="container-fluid py-2">
                     <div className="row">
@@ -184,7 +140,7 @@ class FileList extends React.Component{
                         </div>
                         <div className="row">
                             <div className="col">
-                                Last Modified : {this.state.selectedFile.modified_at}
+                                Last Modified : {this.state.selectedFile.createdAt}
                             </div>
                         </div>
                     </div>
@@ -199,7 +155,7 @@ class FileList extends React.Component{
         return (
             
             <div className="row justify-content-center py-4">
-                <SendEmailModal show={this.state.show} handleClose={this.handleClose} path={this.state.selectedFile?this.state.selectedFile.path:null}>
+                <SendEmailModal show={this.state.show} handleClose={this.handleClose} filePath={this.state.selectedFile?this.state.selectedFile.filePath:null}>
                     {this.renderFileInfo()}
                 </SendEmailModal>
                 <div className="col-lg-8 col-md-12 col-sm-12 col-12">

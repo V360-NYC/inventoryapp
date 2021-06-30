@@ -55,7 +55,7 @@ class MessageDetail extends React.Component{
                 data.rows = dataRows;
             }
 
-            console.log(data)
+
             
             return (
                 <DataTable data={data} />
@@ -80,6 +80,14 @@ class MessageDetail extends React.Component{
             return (
                 <LoadingSpinner />
             );
+        }
+
+        if(this.props.fileAck){
+            return (
+                <span>
+                    {this.props.text}. Click <a href={this.props.downloadURL} target="_blank">here</a>. to download.
+                </span>
+            )
         }
         return this.props.text.split('\n').map((phrase, index) =>{
             return (
