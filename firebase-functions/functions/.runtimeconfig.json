@@ -1,0 +1,12 @@
+{
+  "gmail": {
+    "password": "dimpleben",
+    "email": "sales@anikadiamond.com"
+  },
+  "firebase": {
+    "projectId": "dinsightmessenger",
+    "databaseURL": "https://dinsightmessenger.firebaseio.com",
+    "storageBucket": "dinsightmessenger.appspot.com",
+    "locationId": "us-central"
+  }
+}

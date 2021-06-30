@@ -8,6 +8,15 @@ import openpyxl
 import time
 import math
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+cred = credentials.ApplicationDefault()
+firebase_admin.initialize_app(cred,{
+    'project_id':'kp-assist-4b13d9b7e9e5'
+})
+
+db = firestore.client()
 
 tempdir = tempfile.mkdtemp()
 
@@ -81,7 +90,9 @@ def generate_summary_file(master, inventory):
 
 def generate_master_file(master, inventory):
     return pd.concat([master, inventory]).drop_duplicates(subset=['ReportNo'], keep = 'last')
-    
+
+def get_master_file_path(uid):
+   pass
 
 def onInventoryUpload(event, context):
     file = event
@@ -90,7 +101,7 @@ def onInventoryUpload(event, context):
     
     start_time = time.time()
     downloadFromBucket(
-        "dinsight-user-inventory",
+        "dinsight-user-inventory-test",
         file['name'],
         os.path.join(tempdir,'inventory.xlsx')
     )
@@ -110,7 +121,7 @@ def onInventoryUpload(event, context):
 
     try:
         downloadFromBucket(
-            "dinsight-master-files",
+            "dinsight-master-files-test",
             masterFilePath,
             os.path.join(tempdir, 'master.xlsx')
         )
@@ -134,7 +145,7 @@ def onInventoryUpload(event, context):
     exportDataFrameToExcel(summary, os.path.join(tempdir, 'summary.xlsx'))
     summaryFilePath = uid+'/summary.xlsx'
     uploadToBucket(
-        "dinsight-summary-files",
+        "dinsight-summary-files-test",
         summaryFilePath,
         os.path.join(tempdir, 'summary.xlsx')
     )
@@ -145,7 +156,7 @@ def onInventoryUpload(event, context):
     exportDataFrameToExcel(newMaster, os.path.join(tempdir, 'master.xlsx'))
     
     uploadToBucket(
-        "dinsight-master-files",
+        "dinsight-master-files-test",
         masterFilePath,
         os.path.join(tempdir, 'master.xlsx')
     )

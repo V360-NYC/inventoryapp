@@ -1,0 +1,31 @@
+{
+  "event": {
+    "event_id": 2602616238757463,
+    "timestamp": " 2021-06-26T04:29:31.318Z",
+    "event_type": "google.storage.object.finalize",
+    "resource": {
+      "service": "storage.googleapis.com",
+      "name": "projects/_/buckets/dinsight-user-inventory/objects/DHARM FANCY 06-21.xlsx",
+      "type": "storage#object"
+    }
+  },
+  "data": {
+    "bucket": "dinsight-user-inventory",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "crc32c": "f7zkuQ==",
+    "etag": "CI7X1Z67tPECEAE=",
+    "generation": "1624681771002766",
+    "id": "dinsight-user-inventory/DHARM FANCY 06-21.xlsx/1624681771002766",
+    "kind": "storage#object",
+    "md5Hash": "AE0pmNlE+Uv+wDGVypptsA==",
+    "mediaLink": "https://www.googleapis.com/download/storage/v1/b/dinsight-user-inventory/o/DHARM%20FANCY%2006-21.xlsx?generation=1624681771002766&alt=media",
+    "metageneration": "1",
+    "name": "DHARM FANCY 06-21.xlsx",
+    "selfLink": "https://www.googleapis.com/storage/v1/b/dinsight-user-inventory/o/DHARM%20FANCY%2006-21.xlsx",
+    "size": "601946",
+    "storageClass": "STANDARD",
+    "timeCreated": "2021-06-26T04:29:31.079Z",
+    "timeStorageClassUpdated": "2021-06-26T04:29:31.079Z",
+    "updated": "2021-06-26T04:29:31.079Z"
+  }
+}
