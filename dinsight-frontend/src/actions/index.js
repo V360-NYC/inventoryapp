@@ -19,3 +19,24 @@ export const addUserVendor = (vendor) => {
         payload : vendor
     }
 }
+
+export const addInventoryFiles = (files) => {
+    return {
+        type : 'ADD_INVENTORY_FILES',
+        payload : files
+    }
+}
+
+export const addMasterFiles = (files) => {
+    return {
+        type : 'ADD_MASTER_FILES',
+        payload : files
+    }
+}
+
+export const addSummaryFiles = (files) => {
+    return {
+        type : 'ADD_SUMMARY_FILES',
+        payload : files
+    }
+}

@@ -27,8 +27,35 @@ const vendorsReducer = (vendors = [], action) => {
     return vendors
 }
 
+const inventoryFilesReducer = (inventoryFiles = [], action) => {
+    if(action.type === 'ADD_INVENTORY_FILES'){
+        return [...inventoryFiles, ...action.payload];
+    }
+
+    return inventoryFiles
+}
+
+const masterFilesReducer = (masterFiles = [], action) => {
+    if(action.type === 'ADD_MASTER_FILES'){
+        return [...masterFiles, ...action.payload];
+    }
+
+    return masterFiles
+}
+
+const summaryFilesReducer = (summaryFiles = [], action) => {
+    if(action.type === 'ADD_SUMMARY_FILES'){
+        return [...summaryFiles, ...action.payload];
+    }
+
+    return summaryFiles
+}
+
 export default combineReducers({
     user:AuthStateReducer,
     messages: messagesReducer,
-    vendors : vendorsReducer
+    vendors : vendorsReducer,
+    inventoryFiles : inventoryFilesReducer,
+    masterFiles : masterFilesReducer,
+    summaryFiles : summaryFilesReducer
 });

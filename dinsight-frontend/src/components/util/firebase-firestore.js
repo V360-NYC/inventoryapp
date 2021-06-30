@@ -30,3 +30,14 @@ export const getUserVendors = (uid) => {
     })
     .catch(err=>err)
 }
+
+export const getUserFiles = (path, callback) => {
+    firestoreDB.collection(path)
+    .onSnapshot(changes => {
+        const files = changes.docChanges().map(change => {
+            return change.doc.data();
+        })
+
+        callback(files)
+    })
+}

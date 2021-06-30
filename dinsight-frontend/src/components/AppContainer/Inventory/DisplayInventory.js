@@ -2,7 +2,8 @@ import React from 'react';
 import {connect} from 'react-redux';
 
 import {listBucketObjects} from '../../util/firebase-storage';
-import {getFiles} from '../../util/firebase-realtime';
+import {getUserFiles} from '../../util/firebase-firestore';
+import { addInventoryFiles, addSummaryFiles, addMasterFiles } from '../../../actions';
 
 import FileList from './FileList';
 
@@ -72,7 +73,7 @@ class DisplayInventory extends React.Component{
     
     componentDidMount = () => {
 
-        // getFiles(`linkPointers/${this.props.userID}`);
+        getUserFiles(`userFiles/${this.props.userID}/summaryFiles`, ()=>{});
 
         listBucketObjects(`dinsight-user-inventory-test/${this.props.userID}`)
         .then(async (response) => {
@@ -132,4 +133,8 @@ const mapStateToProps = (state) => {
     }
 }
 
-export default connect(mapStateToProps, {})(DisplayInventory);
+export default connect(mapStateToProps, {
+    addInventoryFiles,
+    addMasterFiles,
+    addSummaryFiles
+})(DisplayInventory);
