@@ -8,9 +8,11 @@ import AppContainer from '../AppContainer/AppContainer';
 import SignIn from '../Authentication/SignIn';
 import { changeAuthState, addInventoryFiles, addSummaryFiles, addMasterFiles } from '../../actions';
 import {postQuery} from '../util/firebase-realtime';
-import {getUserFiles} from '../util/firebase-firestore';
+import {getUserFiles, updateDocument} from '../util/firebase-firestore';
 import createNotification  from '../util/Notification'; 
 import { auth } from '../../config/firebase'
+import { postMessage } from '../../actions';
+import { loadMessages } from '../util/firebase-realtime';
 import LoadingSpinner from '../util/LoadingSpinner';
 
 library.add(fab);
@@ -28,17 +30,27 @@ class App extends Component {
             'summaryFiles', 
             this.props.addSummaryFiles, 
             (files = []) => {
+                
                 files.forEach(file => {
-                    createNotification('Summary File is available !!', 'success');
-                    postQuery(`messages/${this.props.user.uid}`,{
-                        botReply : true,
-                        name : 'message from system',
-                        photoUrl : '/images/logo.png',
-                        fileAck : true,
-                        text : `Latest summary file is now available.`,
-                        downloadURL : file.downloadURL,
-                        timestamp : Date.now()
-                    })
+                        
+                    if(file && !file.ack){
+                        
+                        createNotification('Summary File is available !!', 'success');
+                        postQuery(`messages/${this.props.user.uid}`,{
+                            botReply : true,
+                            name : 'message from system',
+                            photoUrl : '/images/logo.png',
+                            fileAck : true,
+                            text : `Latest summary file is now available.`,
+                            downloadURL : file.downloadURL,
+                            timestamp : Date.now()
+                        })
+
+                        updateDocument(`userFiles/${this.props.user.uid}/summaryFiles`,file.docID ,{
+                            ack : true
+                        })
+
+                    }
                 });
 
             });
@@ -46,9 +58,12 @@ class App extends Component {
     }
     
     componentDidMount = () => {
+       
+
         auth.onAuthStateChanged(user => {
             this.props.changeAuthState(user)
             this.fetchUserFiles();
+            loadMessages(`messages/${this.props.user.uid}`, this.props.postMessage)
             this.setState({
                 isLoading:false
             })
@@ -90,6 +105,7 @@ export default connect(mapStateToProps,{
     changeAuthState,
     addInventoryFiles,
     addMasterFiles,
-    addSummaryFiles
+    addSummaryFiles,
+    postMessage
 
 })(App);

@@ -1,15 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-
-import { postMessage } from '../../actions';
 import MessageDetail from './MessageDetail';
-import { loadMessages } from '../util/firebase-realtime';
 
 class MessageList extends React.Component{
  
     componentDidMount = () => {
-        loadMessages(`messages/${this.props.userID}`, this.props.postMessage)
+        
     }
 
     componentDidUpdate = () => {

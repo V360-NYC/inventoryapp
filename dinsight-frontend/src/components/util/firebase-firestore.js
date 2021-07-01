@@ -34,11 +34,22 @@ export const getUserVendors = (uid) => {
 export const getUserFiles = (userID, type, callback, middleware = (files) => {}) => {
     firestoreDB.collection(`userFiles/${userID}/${type}`).orderBy('createdAt','desc')
     .onSnapshot(changes => {
-        const files = changes.docChanges().map(change => {
-            return change.doc.data();
+        const onlyAddedChanges = changes.docChanges().filter(change => change.type === 'added');
+
+        const addedFiles = onlyAddedChanges.map(change => {
+            return {docID : change.doc.id, ...change.doc.data()}
         })
         
-        if(typeof(middleware) === 'function')middleware(files)
-        callback(files)
+        if(typeof(middleware) === 'function')middleware(addedFiles)
+        callback(addedFiles)
     })
+}
+
+export const updateDocument = (path, docID, data) => {
+    
+    firestoreDB.collection(path).doc(docID).update(data)
+    .then(response => {
+        
+    })
+    .catch(err => console.error(err));
 }

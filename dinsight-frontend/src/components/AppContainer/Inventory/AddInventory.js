@@ -91,20 +91,32 @@ class AddInventory extends React.Component{
             inputDisabled : true
         })
 
+        const datetimeConstructor = new Intl.DateTimeFormat("en",{
+            hour:'2-digit',
+            minute:'2-digit',
+            second:'2-digit',
+            hour12:false
+        });
+
 
         const datetime = new Date()
-        const timeString = `${datetime.getHours()}:${datetime.getMinutes()}:${datetime.getSeconds()}`;
+        const timeString = datetimeConstructor.format(datetime);
 
         const datetimeString = `${this.state.date}T${timeString}`;
-
+        // console.log(datetimeString);
         const TIMESTAMP = new Date(datetimeString).getTime();
         
+        // console.log(TIMESTAMP);
+
         const BUCKET = 'fileuploadskpassist';
         
         const BASE_DIR = `${BUCKET}/${this.props.userID}/${TIMESTAMP}`
         const files = this.state.fileInputs.map(input => {
             const filepath = `${BASE_DIR}/${input.selectedFile.name}`;
 
+            // return new Promise((resolve, reject) => {
+            //     setTimeout(resolve(), 5000);
+            // })
             return uploadToStorage(filepath, input.selectedFile)
             // .then(response => {
             //     createNotification(`${input.selectedFile.name} File Uploaded`, 'success');
@@ -120,14 +132,14 @@ class AddInventory extends React.Component{
             createNotification(`Files Uploaded`, 'success');
             const data = {
                 bucket : BUCKET,
-                uploadedAt : TIMESTAMP,
+                createdAt : TIMESTAMP,
                 vendorName : this.state.vendorName,
                 description : this.state.description
             }
             
             data.files = this.state.fileInputs.map(input => {
                 return {
-                    filePath : `${this.props.userID}/${data.uploadedAt}/${input.selectedFile.name}`
+                    filePath : `${this.props.userID}/${data.createdAt}/${input.selectedFile.name}`
                 }
             })
             // console.log(data)
