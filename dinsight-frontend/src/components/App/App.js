@@ -7,12 +7,12 @@ import { NotificationContainer } from 'react-notifications';
 import AppContainer from '../AppContainer/AppContainer';
 import SignIn from '../Authentication/SignIn';
 import { changeAuthState, addInventoryFiles, addSummaryFiles, addMasterFiles } from '../../actions';
-import {postQuery} from '../util/firebase-realtime';
+
 import {getUserFiles, updateDocument} from '../util/firebase-firestore';
 import createNotification  from '../util/Notification'; 
 import { auth } from '../../config/firebase'
 import { postMessage } from '../../actions';
-import { loadMessages } from '../util/firebase-realtime';
+import { loadMessages, postQuery } from '../util/firebase-firestore';
 import LoadingSpinner from '../util/LoadingSpinner';
 
 library.add(fab);
@@ -36,7 +36,7 @@ class App extends Component {
                     if(file && !file.ack){
                         
                         createNotification('Summary File is available !!', 'success');
-                        postQuery(`messages/${this.props.user.uid}`,{
+                        postQuery(`chats/${this.props.user.uid}/messages`,{
                             botReply : true,
                             name : 'message from system',
                             photoUrl : '/images/logo.png',
@@ -63,7 +63,7 @@ class App extends Component {
         auth.onAuthStateChanged(user => {
             this.props.changeAuthState(user)
             this.fetchUserFiles();
-            loadMessages(`messages/${this.props.user.uid}`, this.props.postMessage)
+            loadMessages(`chats/${this.props.user.uid}/messages`, this.props.postMessage)
             this.setState({
                 isLoading:false
             })

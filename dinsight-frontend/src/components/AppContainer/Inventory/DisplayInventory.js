@@ -1,17 +1,19 @@
 import React from 'react';
 import {connect} from 'react-redux';
+import VendorFileList from './VendorFileList';
 
 import FileList from './FileList';
 
 class DisplayInventory extends React.Component{
     
     getFiles = (data, type) => {
-       return this.props[data].map(({createdAt, filePath, downloadURL}) => {
+       return this.props[data].map(({createdAt, filePath, downloadURL, vendorName}) => {
            return {
                filePath,
                downloadURL,
                createdAt,
-               type 
+               type,
+               vendorName
            }
        });
    }
@@ -22,7 +24,7 @@ class DisplayInventory extends React.Component{
                
                 <div className="row">
                     <div className="col">
-                        <FileList data={this.getFiles('summaryFiles', 'Summary File')} header={'Summary Report'}  />
+                        <VendorFileList data={this.getFiles('summaryFiles', 'Summary File')} header={'Summary Report'}  />
                     </div>
                 </div>
                 <div className="row">
@@ -53,3 +55,5 @@ const mapStateToProps = ({user,inventoryFiles = [], summaryFiles = [], masterFil
 }
 
 export default connect(mapStateToProps, {})(DisplayInventory);
+
+

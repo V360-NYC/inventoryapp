@@ -9,6 +9,7 @@ const AuthStateReducer = (currentState = null, action) => {
 
 const messagesReducer = (messages = [], action) => {
     if(action.type === 'POST_MESSAGE'){
+         
         const index = messages.findIndex(message => message.key === action.payload.key)
         if(index === -1)return [...messages, action.payload];
         

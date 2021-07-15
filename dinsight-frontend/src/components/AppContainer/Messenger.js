@@ -6,7 +6,7 @@ import {connect } from 'react-redux';
 import '../../assets/css/Messenger.css';
 import MessageList from './MessageList';
 import {postMessage} from '../../actions';
-import { postQuery } from '../util/firebase-realtime';
+import { postQuery } from '../util/firebase-firestore';
 
 class Messenger extends React.Component{
     state = {
@@ -20,18 +20,15 @@ class Messenger extends React.Component{
         if(this.state.queryText.length == 0)return;
         const {displayName, uid, photoURL} = this.props.user;
 
-        postQuery(`messages/${uid}`,{
+        postQuery(`chats/${uid}/messages`,{
             name: displayName,
+            botReply : false,
 			text: this.state.queryText,
 			photoUrl: photoURL,
 			uid: uid,
 			timeStamp: new Date().valueOf(),
 			device: "desktop"
         })
-        .then(response => {
-        
-        })
-        .catch(err => console.error(err));
 
         this.setState({
             queryText:''

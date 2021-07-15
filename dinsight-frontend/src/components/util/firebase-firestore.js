@@ -8,11 +8,13 @@ export const postQuery = (path, data) => {
     .catch(err => console.error(err))
 }
 
-export const loadMessages = (path) => {
-    firestoreDB.collection(path)
-    .onSnapshot(change => {
-        
-    })
+export const loadMessages = (path, callback) => {
+    firestoreDB.collection(path).orderBy('timeStamp', 'desc').limit(15)
+    .onSnapshot(snapshot => {
+        snapshot.docChanges().reverse().forEach(change => {
+            callback({key:change.doc.id, ...change.doc.data()});
+        })
+    });
     
 }
 
