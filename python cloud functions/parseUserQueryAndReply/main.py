@@ -15,6 +15,7 @@ import tempfile
 import re
 import numpy as np
 from queryParsing import queryParsing
+from columnMapping import columnMapping
 import json
 
 print(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
@@ -112,17 +113,14 @@ def getFilteredData(df, conditions):
     cert = conditions.get('cert', DEFAULTS['cert'])
     fluor = conditions.get('flour', DEFAULTS['fluor'])
     purity = conditions.get('purity', DEFAULTS['purity'])
-    size = conditions.get('purity', DEFAULTS['size'])
+    size = conditions.get('size', DEFAULTS['size'])
    
+    if df['Size'].dtype != np.float64 :
+        df['Size'] = df['Size'].apply(lambda cell : float(cell.split(' ')[0]))
+    
     return df[
         df['Color'].str.lower().isin(color) &
         df['Shape'].str.lower().isin(shape) &
-        df['Polish'].str.lower().isin(polish) &
-        df['Cut'].str.lower().isin(cut) &
-        df['Symn'].str.lower().isin(symn) &
-        df['Cert'].str.lower().isin(cert) &
-        df['Fluor'].str.lower().isin(fluor) &
-        df['Purity'].str.lower().isin(purity) &
         df['Size'].between(size[0], size[1])
     ]
     
@@ -140,8 +138,14 @@ def parseUserQuery(data, context):
     assert len(attrs) == len(values)
 
     conditions = {key:values[i] for i,key in enumerate(attrs)}
+    
+    if 'shape' in conditions.keys():
+        conditions['shape'] = [columnMapping.getActualShape_(shape).lower() for shape in conditions['shape']]
+        
+    if 'flour' in conditions.keys():
+        conditions['flour'] = [columnMapping.getActualFlour_(flour).lower() for flour in conditions['flour']]
 
-    # print(conditions)
+    print(conditions)
     
     # conditions = extractConditions(data['value']['fields']['text']['stringValue'])
 
@@ -176,11 +180,14 @@ def parseUserQuery(data, context):
     
     masterFilePath = masterFilePath.split('.')[0]+'.pickle'
     
-    localPath = os.path.join(tempdir,'master.pickle')
-    downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+    # localPath = os.path.join(tempdir,'master.pickle')
+    # downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
     
     dfTemp = None
-    with open(os.path.join(tempdir,'master.pickle'),'rb') as pickleFile:
+    # with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+    #     dfTemp=pickle.load(pickleFile)
+        
+    with open('master.pickle','rb') as pickleFile:
         dfTemp=pickle.load(pickleFile)
         
     assert dfTemp is not None
@@ -191,6 +198,7 @@ def parseUserQuery(data, context):
 
     # print(1)
     result = getFilteredData(dfTemp, conditions)
+    return result
     # print(2)
     columnNames = np.array([dfTemp.columns.tolist()])
     rows=result.iloc[:5].to_numpy()
