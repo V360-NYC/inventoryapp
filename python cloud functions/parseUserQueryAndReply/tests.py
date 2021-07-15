@@ -4,8 +4,11 @@ import pandas as pd
 import numpy as np
 import openpyxl
 import pickle
-from main import parseUserQuery
-
+import tempfile
+import os
+from main import parseUserQuery, db, tempdir, downloadFromBucket, get_master_file_path
+import firebase_admin
+from firebase_admin import credentials, firestore
 from event import event, data
 
 class TestFunctions(unittest.TestCase):
@@ -14,8 +17,24 @@ class TestFunctions(unittest.TestCase):
     def setUpClass(cls):
         cls.event = event
         cls.data = data
-        with open('master.pickle', 'rb') as pickleFile:
-            cls.master = pickle.load(pickleFile)
+        masterFilePath = None
+        try:
+            masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
+            
+            assert masterFilePath is not None
+    
+            masterFilePath = masterFilePath.split('.')[0]+'.pickle'
+            localPath = os.path.join(tempdir,'master.pickle')
+            try :
+                downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+                with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+                    cls.master = pickle.load(pickleFile)
+            except Exception as e:
+                print(e)
+
+        except Exception as e:
+            print(e)
+    
     
     @classmethod
     def tearDownClass(cls):

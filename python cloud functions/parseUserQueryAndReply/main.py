@@ -165,7 +165,7 @@ def parseUserQuery(data, context):
     try:
         masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
     except Exception:
-        print("No master file to query")
+        print("No master file to query -- main.py")
         # queryResult = {
         #     'botReply' : True,
         #     'timeStamp' : int(time.time()*1000),
@@ -180,15 +180,27 @@ def parseUserQuery(data, context):
     
     masterFilePath = masterFilePath.split('.')[0]+'.pickle'
     
-    # localPath = os.path.join(tempdir,'master.pickle')
-    # downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+    localPath = os.path.join(tempdir,'master.pickle')
+    try:
+        downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+    except Exception:
+        print("No master pickle file to query -- main.py")
+        # queryResult = {
+        #     'botReply' : True,
+        #     'timeStamp' : int(time.time()*1000),
+        #     'name' : 'message from system',
+        #     'photoUrl' : '/images/logo.png',
+        #     'text' : 'No Master File to query.'
+        # }
+        
+        # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
     
     dfTemp = None
-    # with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
-    #     dfTemp=pickle.load(pickleFile)
-        
-    with open('master.pickle','rb') as pickleFile:
+    with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
         dfTemp=pickle.load(pickleFile)
+        
+    # with open('master.pickle','rb') as pickleFile:
+    #     dfTemp=pickle.load(pickleFile)
         
     assert dfTemp is not None
     
