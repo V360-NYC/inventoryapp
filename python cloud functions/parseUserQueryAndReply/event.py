@@ -27,7 +27,7 @@ data = {
             "integerValue":"1626323994492"
          },
          "uid":{
-            "stringValue":"V65Xdo4EENQmDopi4GkCFiWh3oz2"
+            "stringValue":"uNHBchHOMYP581vTQ5exhfftbWW2"
          }
       },
       "name":"projects/kp-assist/databases/(default)/documents/chats/V65Xdo4EENQmDopi4GkCFiWh3oz2/messages/YMNEXVEzorGSv616KV4o",

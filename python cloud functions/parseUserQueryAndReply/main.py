@@ -112,7 +112,7 @@ def getFilteredData(df, conditions):
     symn = conditions.get('sym', DEFAULTS['symn'])
     cert = conditions.get('cert', DEFAULTS['cert'])
     fluor = conditions.get('flour', DEFAULTS['fluor'])
-    purity = conditions.get('purity', DEFAULTS['purity'])
+    purity = conditions.get('clarity', DEFAULTS['purity'])
     size = conditions.get('size', DEFAULTS['size'])
    
     if df['Size'].dtype != np.float64 :
@@ -121,8 +121,15 @@ def getFilteredData(df, conditions):
     return df[
         df['Color'].str.lower().isin(color) &
         df['Shape'].str.lower().isin(shape) &
+        df['Polish'].str.lower().isin(polish) &
+        df['Cut'].str.lower().isin(cut) &
+        df['Symn'].str.lower().isin(symn) &
+        df['Cert'].str.lower().isin(cert) &
+        df['Fluor'].str.lower().isin(fluor) &
+        df['Purity'].str.lower().isin(purity) &
         df['Size'].between(size[0], size[1])
     ]
+    
     
 
 def parseUserQuery(data, context):
@@ -144,6 +151,15 @@ def parseUserQuery(data, context):
         
     if 'flour' in conditions.keys():
         conditions['flour'] = [columnMapping.getActualFlour_(flour).lower() for flour in conditions['flour']]
+    if 'size' in conditions.keys():
+        if len(conditions['size'])==1:
+            temp=conditions['size'][0]
+            conditions['size']=[temp,temp]
+        else:
+            men=min(conditions['size'][0],conditions['size'][1])
+            mex=max(conditions['size'][0],conditions['size'][1])
+            conditions['size'][0]=men
+            conditions['size'][1]=mex
 
     print(conditions)
     
