@@ -1,5 +1,5 @@
 import unittest
-import requests
+# import requests
 import pandas as pd
 import numpy as np
 import openpyxl
@@ -19,15 +19,17 @@ class TestFunctions(unittest.TestCase):
         cls.data = data
         masterFilePath = None
         try:
-            masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
+            # masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
             
-            assert masterFilePath is not None
+            # assert masterFilePath is not None
     
-            masterFilePath = masterFilePath.split('.')[0]+'.pickle'
-            localPath = os.path.join(tempdir,'master.pickle')
+            # masterFilePath = masterFilePath.split('.')[0]+'.pickle'
+            # localPath = os.path.join(tempdir,'master.pickle')
             try :
-                downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
-                with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+                # downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+                # with open(os.path.join(tempdir,'master.pickle'),'rb') as pickleFile:
+                #    cls.master = pickle.load(pickleFile)
+                with open('master.pickle','rb') as pickleFile:
                     cls.master = pickle.load(pickleFile)
             except Exception as e:
                 print(e)

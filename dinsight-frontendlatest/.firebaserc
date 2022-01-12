@@ -1,0 +1,28 @@
+{
+  "projects": {
+    "default": "kp-assist",
+    "testing": "vertical-veld-315508"
+  },
+  "targets": {
+    "dinsightmessenger": {
+      "hosting": {
+        "test": [
+          "dinsight-react-refactor"
+        ]
+      }
+    },
+    "kp-assist": {
+      "hosting": {
+        "parallel2": [
+          "test2-dinsight"
+        ],
+        "parallel1": [
+          "test1-dinsight"
+        ],
+        "default": [
+          "kp-assist"
+        ]
+      }
+    }
+  }
+}

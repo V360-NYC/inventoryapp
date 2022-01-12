@@ -212,7 +212,7 @@ def parseUserQuery(data, context):
         # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
     
     dfTemp = None
-    with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+    with open('master.pickle','rb') as pickleFile:
         dfTemp=pickle.load(pickleFile)
         
     # with open('master.pickle','rb') as pickleFile:

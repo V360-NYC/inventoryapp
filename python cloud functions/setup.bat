@@ -1,1 +1,1 @@
-set GOOGLE_APPLICATION_CREDENTIALS="C:\Users\OMKAR\google\credentials\vertical-veld-315508-86bb8cf11600";
+set GOOGLE_APPLICATION_CREDENTIALS="C:\Users\hekka\aarsh\appliedai\python cloud functions\kp-assist-df6fbc59c7d0.json";
