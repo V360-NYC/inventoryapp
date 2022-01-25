@@ -8,8 +8,9 @@ class QuickSearch extends React.Component{
 
     handleQuerySelect = (event) => {
         const {uid, displayName, photoURL} = this.props.user;
-       
-        postQuery(`messages/${uid}`,{
+        console.log(event.target.getAttribute('value'));
+        postQuery(`chats/${uid}/messages`,{
+            botReply:false,
             name: displayName,
 			text: event.target.getAttribute('value'),
 			photoUrl: photoURL,
@@ -17,10 +18,7 @@ class QuickSearch extends React.Component{
 			timeStamp: new Date().valueOf(),
 			device: "desktop"
         })
-        .then(response => {
-        
-        })
-        .catch(err => console.error(err));
+     
     }
 
     renderQuickSearcTable = (colors, clarity, stats, colorValues, clarityValues, caratValues) => {
