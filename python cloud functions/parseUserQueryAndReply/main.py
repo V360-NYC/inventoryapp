@@ -107,13 +107,19 @@ def addReplyToFirestore(collectionPath, doc):
     collection_ref = db.collection(collectionPath)
     
     collection_ref.add(doc)
-def updateFirestore(collectionPath,dc1):
-      collection_ref=db.collection(collectionPath)
-      collection_ref.set(dc1,merge=True)
+def updateFirestore(uidd,dc1):
+      doc_ref=db.collection('lastResInfo').document(uidd)
+      doc_ref.set(dc1)
+
+
+def getLatestTable(uidd):
+    doc_ref=db.collection('lastResInfo').document(uidd)
+    return doc_ref.get().to_dict()
 
 def extractConditions(textInput):
     return json.loads(textInput)
     
+
 
 def getFilteredData(df, conditions):
     color = conditions.get('color', DEFAULTS['color'])
@@ -347,7 +353,9 @@ def parseUserQuery(data, context):
         print(4)
         
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
-        updateFirestore('lastResult/{}/message'.format(data['value']['fields']['uid']['stringValue']),queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
+        doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
+        print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)
         queryFilePath = os.path.join(tempdir, '{}_master.csv'.format(str(int(time.time()))))
