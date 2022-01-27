@@ -20,9 +20,11 @@ from quickSearch import createQSR
 from pandasql import sqldf
 import json
 
+	
+print(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
 tempdir = tempfile.mkdtemp()
 client = storage.Client(project="kp-assist")
-cred = credentials.ApplicationDefault()
+cred = credentials.Certificate(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
 
 firebase_admin.initialize_app(cred,{
     'project_id':'kp-assist-4b13d9b7e9e5'
@@ -79,7 +81,7 @@ def downloadFromBucket(bucketName, path, filepath):
   
     blob.download_to_filename(filepath)
     
-def uploadToBucket(bucketName, path, filepath):
+"""def uploadToBucket(bucketName, path, filepath):
     bucket = client.get_bucket(bucketName)
 
     blob = bucket.blob(path)
@@ -87,7 +89,7 @@ def uploadToBucket(bucketName, path, filepath):
     with open(filepath, 'rb') as file:
         blob.upload_from_file(file)
 
-    blob.make_public()
+    blob.make_public()"""
        
   
 def getCondition(line):
@@ -107,14 +109,14 @@ def addReplyToFirestore(collectionPath, doc):
     collection_ref = db.collection(collectionPath)
     
     collection_ref.add(doc)
-def updateFirestore(uidd,dc1):
+"""def updateFirestore(uidd,dc1):
       doc_ref=db.collection('lastResInfo').document(uidd)
       doc_ref.set(dc1)
 
 
 def getLatestTable(uidd):
     doc_ref=db.collection('lastResInfo').document(uidd)
-    return doc_ref.get().to_dict()
+    return doc_ref.get().to_dict()"""
 
 def extractConditions(textInput):
     return json.loads(textInput)
@@ -144,7 +146,7 @@ def getFilteredData(df, conditions):
         df['Cert'].str.lower().isin(cert) &
         df['Fluor'].str.lower().isin(fluor) &
         df['Purity'].str.lower().isin(purity) &
-        df['Weight'].between(size[0], size[1])
+        df['Size'].between(size[0], size[1])
     ]
     
     
@@ -156,7 +158,7 @@ def parseUserQuery(data, context):
     parsedResponse=queryParsing.parseUserRequest(data['value']['fields']['text']['stringValue'])
     # print(parsedResponse['parsedQuery']['entityName'], parsedResponse['parsedQuery']['entityValue'])
     
-    if parsedResponse['queryMode'] == 'help':
+    """if parsedResponse['queryMode'] == 'help':
         response = {
             'botReply' : True,
             'timeStamp' : int(time.time()*1000),
@@ -239,9 +241,9 @@ def parseUserQuery(data, context):
             'text':''
         }
         
-        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)"""
     
-    elif parsedResponse['queryMode'] == 'btQuery':
+    if parsedResponse['queryMode'] == 'btQuery':
         attrs = parsedResponse['parsedQuery']['entityName']
         values = parsedResponse['parsedQuery']['entityValue']
 
@@ -270,30 +272,30 @@ def parseUserQuery(data, context):
 
         text = '\\n'.join(['{0} = {1}'.format(key,', '.join([str(item) for item in value])) for key,value in conditions.items()])
         
-        ack = {
+        """ack = {
             'botReply' : True,
             'timeStamp' : int(time.time()*1000),
             'name' : 'message from system',
             'photoUrl' : '/images/logo.png',
             'text' : 'Please wait. We are fetching results for \\n{}'.format(text)
-        }
+        }"""
             
-        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), ack)
+        #addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), ack)
         
         masterFilePath = None
         try:
             masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
         except Exception as e:
-            print(e)
-            queryResult = {
-                'botReply' : True,
-                'timeStamp' : int(time.time()*1000),
-                'name' : 'message from system',
-                'photoUrl' : '/images/logo.png',
-                'text' : 'No Master File to query.'
-            }
-            
-            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+            """ print(e)
+                queryResult = {
+                    'botReply' : True,
+                    'timeStamp' : int(time.time()*1000),
+                    'name' : 'message from system',
+                    'photoUrl' : '/images/logo.png',
+                    'text' : 'No Master File to query.'
+                }
+                
+                addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)"""
         
         assert masterFilePath is not None
         
@@ -304,7 +306,7 @@ def parseUserQuery(data, context):
             downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
         except Exception as e:
             print(e)
-            queryResult = {
+            """queryResult = {
                 'botReply' : True,
                 'timeStamp' : int(time.time()*1000),
                 'name' : 'message from system',
@@ -312,10 +314,10 @@ def parseUserQuery(data, context):
                 'text' : 'No Master File to query.'
             }
             
-            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)"""
         
         dfTemp = None
-        with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+        with open('master.pickle','rb') as pickleFile:
             dfTemp=pickle.load(pickleFile)
             
         # with open('master.pickle','rb') as pickleFile:
@@ -328,8 +330,8 @@ def parseUserQuery(data, context):
 
         print(1)
         result = getFilteredData(dfTemp, conditions)
-        # return result
-        print(2)
+        return result
+    """print(2)
         columnNames = np.array([dfTemp.columns.tolist()])
         rows=result.iloc[:100].to_numpy()
         emptyArray=np.concatenate((columnNames,rows),axis=0)
@@ -392,4 +394,4 @@ def parseUserQuery(data, context):
             'searchResult': searchResult,
             'text' : 'Sorry, We are unable to understand your message. Please try again !'
         }
-        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)"""
