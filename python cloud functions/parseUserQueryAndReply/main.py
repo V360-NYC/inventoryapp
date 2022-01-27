@@ -14,7 +14,7 @@ import pickle
 import tempfile
 import re
 import numpy as np
-from queryParsing import queryParsing
+from queryParsing import *
 from columnMapping import columnMapping
 from quickSearch import createQSR
 from pandasql import sqldf
@@ -155,7 +155,7 @@ def parseUserQuery(data, context):
     if data['value']['fields']['botReply']['booleanValue']:
         return 
 
-    parsedResponse=queryParsing.parseUserRequest(data['value']['fields']['text']['stringValue'])
+    parsedResponse=parseUserRequest(data['value']['fields']['text']['stringValue'])
     # print(parsedResponse['parsedQuery']['entityName'], parsedResponse['parsedQuery']['entityValue'])
     
     """if parsedResponse['queryMode'] == 'help':
@@ -246,7 +246,9 @@ def parseUserQuery(data, context):
     if parsedResponse['queryMode'] == 'btQuery':
         attrs = parsedResponse['parsedQuery']['entityName']
         values = parsedResponse['parsedQuery']['entityValue']
-
+        for i in range(len(values)):
+            if type(values[i]) is not list:
+                values[i] = [values[i]]
         assert len(attrs) == len(values)
 
         conditions = {key:values[i] for i,key in enumerate(attrs)}
@@ -329,6 +331,7 @@ def parseUserQuery(data, context):
             dfTemp['Size'] = dfTemp['Size'].apply(lambda cell : float(cell.split(' ')[0]))
 
         print(1)
+        print(conditions)
         result = getFilteredData(dfTemp, conditions)
         return result
     """print(2)
