@@ -618,10 +618,10 @@ def queryParser_(userMessage):
 	}"""
 
 	parsedResult = parsePointer(parsedResult)
-	parsedResult = replaceHotKeyword_(parsedResult, sizeKeywordValue)
+	"""parsedResult = replaceHotKeyword_(parsedResult, sizeKeywordValue)
 	parsedResult = replaceHotKeyword_(parsedResult, multiValueKeywordValue)
 	parsedResult = replaceHotKeyword_(parsedResult, priceKeywordValue)
-	parsedResult = replaceHotKeyword_(parsedResult, clarityKeywordValue)
+	parsedResult = replaceHotKeyword_(parsedResult, clarityKeywordValue)"""
 
 	print('1st parse query is: ' + parsedResult["userMessage"])
 

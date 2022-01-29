@@ -107,6 +107,8 @@ class TestCases(unittest.TestCase):
         self.assertEqual(getBackClause_([128]),"(Back > ABS(128))")
 
     def test18(self):
+        print(parseUserRequest("D F VVS1 VVS2 0.18 0.45 354 819")) #to be improved
+        #second to use G H I3 0.96 1.45 3282 5248
         self.assertEqual(parseUserRequest("remove shape"),{'columnNameArray': ['Shape'], 'queryMode': 'hide'})
         
 if __name__ == "__main__":
