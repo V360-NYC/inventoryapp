@@ -57,7 +57,7 @@ class QuickSearch extends React.Component{
             if(index%5 === 0){
                 return (
                     <tr>
-                        <td rowSpan="5">{colors[index%5]}</td>
+                        <td rowSpan="5">{colors[index/5]}</td>
                         {row}
                     </tr>
                 )
