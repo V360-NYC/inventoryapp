@@ -2,6 +2,7 @@
 import React from 'react';
 import LoadingSpinner from '../util/LoadingSpinner';
 import DataTable from './DataTable';
+import quickSearch from './quickSearch';
 import QuickSearch from './quickSearch';
 
 class MessageDetail extends React.Component{
@@ -48,24 +49,27 @@ class MessageDetail extends React.Component{
             
         }
 
-        // if(this.props.quickSearch){
-        //     // console.log(this.props.quickSearch, this.props.stats)
-        //     return (
-        //         <QuickSearch 
-        //             colors={this.props.quickSearch[1]}
-        //             clarity={this.props.quickSearch[2]}
-        //             colorValues={this.props.quickSearch[4]}
-        //             clarityValues={this.props.quickSearch[5]}
-        //             caratValues={this.props.quickSearch[6]}
-        //             stats={this.props.stats}
-        //         />
-        //     )
-        // }
-        // if(this.props.text === null){
-        //     return (
-        //         <LoadingSpinner />
-        //     );
-        // }
+        if(this.props.queryMode==='quick-search'){
+            
+            const quickSearchparsed=JSON.parse(this.props.quickSearch);
+            const statsparsed=JSON.parse(this.props.stats);
+
+            return (
+                <QuickSearch 
+                    colors={quickSearchparsed[1]}
+                    clarity={quickSearchparsed[2]}
+                    colorValues={quickSearchparsed[4]}
+                    clarityValues={quickSearchparsed[5]}
+                    caratValues={quickSearchparsed[6]}
+                    stats={statsparsed}
+                />
+            )
+        }
+        if(this.props.text === null){
+            return (
+                <LoadingSpinner />
+            );
+        }
 
         if(this.props.fileAck){
             return (

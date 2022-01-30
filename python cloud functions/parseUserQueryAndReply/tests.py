@@ -6,7 +6,7 @@ import openpyxl
 import pickle
 import tempfile
 import os
-from main import parseUserQuery, db, tempdir, downloadFromBucket, get_master_file_path
+from main import parseUserQuery,  tempdir
 import firebase_admin
 from firebase_admin import credentials, firestore
 from event import event, data

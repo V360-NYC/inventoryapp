@@ -36,7 +36,7 @@ class App extends Component {
                     if(file && !file.ack){
                         
                         createNotification('Summary File is available !!', 'success');
-                        postQuery(`messages/${this.props.user.uid}`,{
+                        postQuery(`chats/${this.props.user.uid}/messages`,{
                             botReply : true,
                             name : 'message from system',
                             photoUrl : '/images/logo.png',

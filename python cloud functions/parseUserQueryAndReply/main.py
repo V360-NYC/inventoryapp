@@ -14,15 +14,16 @@ import pickle
 import tempfile
 import re
 import numpy as np
-from queryParsing import queryParsing
+from queryParsing import *
+# from queryParsing import queryParsing
 from columnMapping import columnMapping
+from quickSearch import createQSR
+from pandasql import sqldf
 import json
-
-print(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
 
 tempdir = tempfile.mkdtemp()
 client = storage.Client(project="kp-assist")
-cred = credentials.Certificate(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+cred = credentials.ApplicationDefault()
 
 firebase_admin.initialize_app(cred,{
     'project_id':'kp-assist-4b13d9b7e9e5'
@@ -57,15 +58,10 @@ CATEGORICAL_COLUMNS = [
     'originCountry',
 ]
 
-def get_master_file_path(uid):
-    collection_ref = db.collection('/'.join(['userFiles', uid, 'masterFiles'])).order_by('createdAt', direction=firestore.Query.DESCENDING)
+def get_master_file_path():
     
-    docs = collection_ref.get()
-    # print(docs)
-    if len(docs) > 0:
-        return docs[0].to_dict()['filePath']
-        
-    raise Exception('remote master not found')
+    return 'master.xlsx'
+
 
 
 def downloadFromBucket(bucketName, path, filepath):
@@ -79,7 +75,16 @@ def downloadFromBucket(bucketName, path, filepath):
   
     blob.download_to_filename(filepath)
     
+def uploadToBucket(bucketName, path, filepath):
+    bucket = client.get_bucket(bucketName)
+
+    blob = bucket.blob(path)
     
+    with open(filepath, 'rb') as file:
+        blob.upload_from_file(file)
+
+    blob.make_public()
+       
   
 def getCondition(line):
     line = re.sub(r'\s', r':', line)
@@ -98,11 +103,29 @@ def addReplyToFirestore(collectionPath, doc):
     collection_ref = db.collection(collectionPath)
     
     collection_ref.add(doc)
-    
+def updateFirestore(uidd,dc1):
+      doc_ref=db.collection('lastResInfo').document(uidd)
+      doc_ref.set(dc1)
+
+
+def getLatestTable(uidd):
+    doc_ref=db.collection('lastResInfo').document(uidd)
+    return doc_ref.get().to_dict()
+#suppose a=getLatestTable(uidd)
+#for retriving searchResult searchResultfetched=a['searchResult']
 
 def extractConditions(textInput):
     return json.loads(textInput)
     
+def dict2df(searchResult):
+    print(len(searchResult))
+    print(searchResult['0'])
+    print(searchResult['1'])
+    data=[searchResult[str(a)] for a in range(1,len(searchResult))]
+    df=pd.DataFrame.from_dict(data)
+    df.columns=searchResult['0']
+    print(type(df))
+    return df
 
 def getFilteredData(df, conditions):
     color = conditions.get('color', DEFAULTS['color'])
@@ -127,7 +150,7 @@ def getFilteredData(df, conditions):
         df['Cert'].str.lower().isin(cert) &
         df['Fluor'].str.lower().isin(fluor) &
         df['Purity'].str.lower().isin(purity) &
-        df['Size'].between(size[0], size[1])
+        df['Weight'].between(size[0], size[1])
     ]
     
     
@@ -136,126 +159,257 @@ def parseUserQuery(data, context):
     if data['value']['fields']['botReply']['booleanValue']:
         return 
 
-    parsedResponse=queryParsing.parseUserRequest(data['value']['fields']['text']['stringValue'])
+    parsedResponse=parseUserRequest(data['value']['fields']['text']['stringValue'])
     # print(parsedResponse['parsedQuery']['entityName'], parsedResponse['parsedQuery']['entityValue'])
     
-    attrs = parsedResponse['parsedQuery']['entityName']
-    values = parsedResponse['parsedQuery']['entityValue']
+    if parsedResponse['queryMode'] == 'help':
+        response = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'text' : parsedResponse['userMessage'],
+            'queryMode':'help'
+        }
+        #uid =data['value']['fields']['uid']['stringValue']
 
-    assert len(attrs) == len(values)
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)
+    
+    if parsedResponse['queryMode'] == 'quick-search':
+        #add alll of errors lyk not finding master, giving the ack, no master, and finding the file and the pandasql query
+        text = 'quick search'
+        
+        ack = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'text' : 'Please wait. We are fetching results for \\n{}'.format(text)
+        }
+            
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), ack)
+        
+        masterFilePath = None
+        try:
+            masterFilePath = get_master_file_path()
+        except Exception as e:
+            print(e)
+            queryResult = {
+                'botReply' : True,
+                'timeStamp' : int(time.time()*1000),
+                'name' : 'message from system',
+                'photoUrl' : '/images/logo.png',
+                'text' : 'No Master File to query.'
+            }
+            
+            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        
+        assert masterFilePath is not None
+        
+        masterFilePath = masterFilePath.split('.')[0]+'.pickle'
+        
+        localPath = os.path.join(tempdir,'master.pickle')
+        try:
+            downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+        except Exception as e:
+            print(e)
+            queryResult = {
+                'botReply' : True,
+                'timeStamp' : int(time.time()*1000),
+                'name' : 'message from system',
+                'photoUrl' : '/images/logo.png',
+                'text' : 'No Master File to query.'
+            }
+            
+            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        
+        df1 = None
+        with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+            df1=pickle.load(pickleFile)
+            
+        # with open('master.pickle','rb') as pickleFile:
+        #     dfTemp=pickle.load(pickleFile)
+            
+        assert df1 is not None
+        
+        output=sqldf("SELECT Color,Purity, Round(Weight,2) Carat,cast(ROUND(Max(Total),0) as int) Max_price, cast(ROUND(Min(Total)) as int) Min_price,  Round(Avg(Total)) Avg_price, count(*) count from df1 GROUP BY Color,Purity,Carat ORDER BY Color,Purity,Carat")
+        qsrAns=createQSR(output)
+        #end it all here 
+        response = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'quickSearch' : qsrAns['quickSearchArray'],
+            'stats': qsrAns['stats'],
+            'queryMode':'quick-search',
+            'text':''
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)
+    
+    elif parsedResponse['queryMode'] == 'btQuery':
+        attrs = parsedResponse['parsedQuery']['entityName']
+        values = parsedResponse['parsedQuery']['entityValue']
+        for i in range(len(values)):
+            if type(values[i]) is not list:
+                values[i] = [values[i]]
+        assert len(attrs) == len(values)
 
-    conditions = {key:values[i] for i,key in enumerate(attrs)}
-    
-    if 'shape' in conditions.keys():
-        conditions['shape'] = [columnMapping.getActualShape_(shape).lower() for shape in conditions['shape']]
+        conditions = {key:values[i] for i,key in enumerate(attrs)}
         
-    if 'flour' in conditions.keys():
-        conditions['flour'] = [columnMapping.getActualFlour_(flour).lower() for flour in conditions['flour']]
-    if 'size' in conditions.keys():
-        if len(conditions['size'])==1:
-            temp=conditions['size'][0]
-            conditions['size']=[temp,temp]
-        else:
-            men=min(conditions['size'][0],conditions['size'][1])
-            mex=max(conditions['size'][0],conditions['size'][1])
-            conditions['size'][0]=men
-            conditions['size'][1]=mex
+        if 'shape' in conditions.keys():
+            conditions['shape'] = [columnMapping.getActualShape_(shape).lower() for shape in conditions['shape']]
+            
+        if 'flour' in conditions.keys():
+            conditions['flour'] = [columnMapping.getActualFlour_(flour).lower() for flour in conditions['flour']]
+        if 'size' in conditions.keys():
+            if len(conditions['size'])==1:
+                temp=conditions['size'][0]
+                conditions['size']=[temp,temp]
+            else:
+                men=min(conditions['size'][0],conditions['size'][1])
+                mex=max(conditions['size'][0],conditions['size'][1])
+                conditions['size'][0]=men
+                conditions['size'][1]=mex
 
-    print(conditions)
-    
-    # conditions = extractConditions(data['value']['fields']['text']['stringValue'])
+        print(conditions)
+        
+        # conditions = extractConditions(data['value']['fields']['text']['stringValue'])
 
-    text = '\\n'.join(['{0} = {1}'.format(key,', '.join([str(item) for item in value])) for key,value in conditions.items()])
-    
-    # ack = {
-    #     'botReply' : True,
-    #     'timeStamp' : int(time.time()*1000),
-    #     'name' : 'message from system',
-    #     'photoUrl' : '/images/logo.png',
-    #     'text' : 'Please wait. We are fetching results for \\n{}'.format(text)
-    # }
+        text = '\\n'.join(['{0} = {1}'.format(key,', '.join([str(item) for item in value])) for key,value in conditions.items()])
         
-    # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), ack)
-    
-    masterFilePath = None
-    try:
-        masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
-    except Exception:
-        print("No master file to query -- main.py")
-        # queryResult = {
-        #     'botReply' : True,
-        #     'timeStamp' : int(time.time()*1000),
-        #     'name' : 'message from system',
-        #     'photoUrl' : '/images/logo.png',
-        #     'text' : 'No Master File to query.'
-        # }
+        ack = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'text' : 'Please wait. We are fetching results for \\n{}'.format(text)
+        }
+            
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), ack)
         
-        # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
-    
-    assert masterFilePath is not None
-    
-    masterFilePath = masterFilePath.split('.')[0]+'.pickle'
-    
-    localPath = os.path.join(tempdir,'master.pickle')
-    try:
-        downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
-    except Exception:
-        print("No master pickle file to query -- main.py")
-        # queryResult = {
-        #     'botReply' : True,
-        #     'timeStamp' : int(time.time()*1000),
-        #     'name' : 'message from system',
-        #     'photoUrl' : '/images/logo.png',
-        #     'text' : 'No Master File to query.'
-        # }
+        masterFilePath = None
+        try:
+            masterFilePath = get_master_file_path()
+        except Exception as e:
+            print(e)
+            queryResult = {
+                'botReply' : True,
+                'timeStamp' : int(time.time()*1000),
+                'name' : 'message from system',
+                'photoUrl' : '/images/logo.png',
+                'text' : 'No Master File to query.'
+            }
+            
+            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
         
-        # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
-    
-    dfTemp = None
-    with open('master.pickle','rb') as pickleFile:
-        dfTemp=pickle.load(pickleFile)
+        assert masterFilePath is not None
         
-    # with open('master.pickle','rb') as pickleFile:
-    #     dfTemp=pickle.load(pickleFile)
+        masterFilePath = masterFilePath.split('.')[0]+'.pickle'
         
-    assert dfTemp is not None
-    
-    if dfTemp['Size'].dtype != np.float64:
-        print('changing...')
-        dfTemp['Size'] = dfTemp['Size'].apply(lambda cell : float(cell.split(' ')[0]))
+        localPath = os.path.join(tempdir,'master.pickle')
+        try:
+            downloadFromBucket('dinsight-master-files-test',masterFilePath,localPath)
+        except Exception as e:
+            print(e)
+            queryResult = {
+                'botReply' : True,
+                'timeStamp' : int(time.time()*1000),
+                'name' : 'message from system',
+                'photoUrl' : '/images/logo.png',
+                'text' : 'No Master File to query.'
+            }
+            
+            addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        
+        dfTemp = None
+        with open(os.path.join(tempdir, 'master.pickle'),'rb') as pickleFile:
+            dfTemp=pickle.load(pickleFile)
+            
+        # with open('master.pickle','rb') as pickleFile:
+        #     dfTemp=pickle.load(pickleFile)
+            
+        assert dfTemp is not None
+        
+        if dfTemp['Size'].dtype != np.float64:
+            dfTemp['Size'] = dfTemp['Size'].apply(lambda cell : float(cell.split(' ')[0]))
 
-    # print(1)
-    result = getFilteredData(dfTemp, conditions)
-    return result
-    # print(2)
-    columnNames = np.array([dfTemp.columns.tolist()])
-    rows=result.iloc[:5].to_numpy()
-    emptyArray=np.concatenate((columnNames,rows),axis=0)
-    # print(3)
-    searchResult = dict()
-    
-    for i in range(emptyArray.shape[0]):
-        searchResult[str(i)] = emptyArray[i].tolist()
+        print(1)
+        result = getFilteredData(dfTemp, conditions)
+        # return result
+        print(2)
+        columnNames = np.array([dfTemp.columns.tolist()])
+        cols=dfTemp.columns.tolist()
+        print('columnNames',type(columnNames))
+        print('cols',type(cols))
+        rows=result.iloc[:100].to_numpy()
+        emptyArray=np.concatenate((columnNames,rows),axis=0)
+        print(3)
+        searchResult = dict()
         
+        for i in range(emptyArray.shape[0]):
+            searchResult[str(i)] = emptyArray[i].tolist()
+            
+        hiddenColumnNames=[]    
+        # print(result.shape)
+        queryResult = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': searchResult,
+            'columnNames': cols,
+            'hiddenColumnNames':hiddenColumnNames,
+            'text' : 'This is a preview of Original Result.\n We have retrieved {} rows'.format(result.shape[0])
+        }
+
+        print(4)
         
-    print(result.shape)
-    # queryResult = {
-    #     'botReply' : True,
-    #     'timeStamp' : int(time.time()*1000),
-    #     'name' : 'message from system',
-    #     'photoUrl' : '/images/logo.png',
-    #     'searchResult': searchResult,
-    #     'text' : 'This is a preview of Original Result.\n We have retrieved {} rows'.format(result.shape[0])
-    # }
-
-    # print(4)
-    
-    # addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
-    
-    # print(5)
-    # print(queryResult)
-    
-    
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
+        doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
+        print(type(doc_temp['searchResult']))
+        tempSR=doc_temp['searchResult']
+        tempdfSR=dict2df(tempSR)
         
-
-
+        print(type(tempdfSR))
+        print(doc_temp['botReply'])
+        # print(5)
+        # print(queryResult)
+        queryFilePath = os.path.join(tempdir, '{}_master.csv'.format(str(int(time.time()))))
+        
+        result.to_csv(queryFilePath, index = False)
+        
+        params=[]
+        params.append(data['value']['fields']['uid']['stringValue'])
+        params.append('{}_master.csv'.format(str(int(time.time()))))
+        masterFilePath = '/'.join(params)
+        
+        uploadToBucket(
+            "dinsight-master-files-test",
+            masterFilePath,
+            queryFilePath
+        )
+        
+        queryFileDownloadLinkPrompt = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'downloadURL' : '/'.join(['https://storage.googleapis.com','dinsight-master-files-test', masterFilePath]),
+            'text' : 'To download the results for following query\\n{}\\n'.format(text),
+            'fileAck' : True
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryFileDownloadLinkPrompt)
+    else :
+        response = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': searchResult,
+            'text' : 'Sorry, We are unable to understand your message. Please try again !'
+        }
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)

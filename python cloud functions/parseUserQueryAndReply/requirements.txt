@@ -30,3 +30,4 @@ pandas==1.0.5
 js2py
 openpyxl==3.0.7
 numpy
+pandasql
