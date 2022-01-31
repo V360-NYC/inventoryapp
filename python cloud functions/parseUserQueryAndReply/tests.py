@@ -51,11 +51,12 @@ class TestFunctions(unittest.TestCase):
             self.master['Shape'].str.lower().isin(['round', 'oval']) 
         ]
         
-        self.data['value']['fields']['text']['stringValue'] = 'rd oval d e f'
+        self.data['value']['fields']['text']['stringValue'] = "rd oval def"
         
         result = parseUserQuery(self.data, self.event)
         
         self.assertEqual(len(current.index), len(result.index))
+        
     
     def test_2(self):
         if self.master['Size'].dtype != np.float64 : 

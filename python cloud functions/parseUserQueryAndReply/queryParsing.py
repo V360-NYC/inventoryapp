@@ -1014,3 +1014,4 @@ def parseQueryToText(parsedResult):
 				entityValueStr = entityValueStr + str(entityValue[j]) + ' '
 			parsedQuery += "\n" + parsedResult["entityName"][i] + " = " + entityValueStr + '\t'
 	return parsedQuery
+	
