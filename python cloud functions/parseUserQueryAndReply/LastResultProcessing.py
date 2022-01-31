@@ -2,30 +2,24 @@ from queryParsing import *
 from utils import *
 import pandas as pd
 
-def changeColumnVisibility(lastResult,uid, queryMode, ts, columnNameArray, showBool):
-    shownColumnName = lastResult["columnName"]
-    newShownColumnName = []
+def changeColumnVisibility(lastResult,columnNameArray,showBool):
+    shownColumnName = lastResult["columnName"] #all columns
+    oldHide = lastResult["hiddenColumnName"]
     newHiddenColumnName = []
     if (showBool):
-        newShownColumnName = shownColumnName
-        for i in range(len(lastResult["hiddenColumnName"])):
-            if indexOf(columnNameArray,lastResult["hiddenColumnName"][i]) != -1:
-                newShownColumnName.append(lastResult["hiddenColumnName"][i])
-            else:
-                newHiddenColumnName.append(lastResult["hiddenColumnName"][i])
+        for i in oldHide:
+            if indexOf(columnNameArray,i) == -1:
+                newHiddenColumnName.append(i)
     else:
         newHiddenColumnName = lastResult["hiddenColumnName"]
         for i in range(len(lastResult["columnName"])):
             if indexOf(columnNameArray,lastResult["columnName"][i]) != -1:
                 newHiddenColumnName.append(lastResult["columnName"][i])
-            else:
-                newShownColumnName.append(lastResult["columnName"][i])
-
-    #making change in dataframe
-    df = lastResult["searchResult"]
-    df = dict2df(df)
-    resultArray = df[newShownColumnName]
-    return resultArray
+    indexes = []
+    for i in newHiddenColumnName:
+        indexes.append(indexOf(shownColumnName,i))
+    #making change in dataframe   
+    return [newHiddenColumnName,indexes]
     #cross check with frontend requirements
     #replyUser_(uid, queryMode, ts, 'Search Result', 'Modified table is as follow:', resultArray)
     #saveLastResult_(uid, queryMode, ts, lastResult["searchResult"], lastResult["entityName"], lastResult["entityValue"],newShownColumnName, newHiddenColumnName)

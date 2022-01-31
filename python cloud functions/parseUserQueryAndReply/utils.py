@@ -1,5 +1,6 @@
 #can be optimize using pandas inbuilt
 import pandas as pd
+import openpyxl
 
 def dict2df(searchResult):
     data=[searchResult[str(a)] for a in range(1,len(searchResult))]
@@ -35,3 +36,10 @@ def ParseBQResultAndCreateArray(df,shownColumnName):
             data.append(values)
         #print(data)
     return data
+
+def dataframeToDictionary(df):
+    dictionary = dict()
+    dictionary['0']=df.columns.values
+    for i in range(len(df)):
+        dictionary[str(i+1)]=df.iloc[i].values
+    return dictionary

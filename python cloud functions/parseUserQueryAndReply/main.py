@@ -95,8 +95,8 @@ def getCondition(line):
     
 def addReplyToFirestore(collectionPath, doc):
     collection_ref = db.collection(collectionPath)
-    
     collection_ref.add(doc)
+
 def updateFirestore(uidd,dc1):
       doc_ref=db.collection('lastResInfo').document(uidd)
       doc_ref.set(dc1)
@@ -142,6 +142,44 @@ def parseUserQuery(data, context):
 
     parsedResponse=parseUserRequest(data['value']['fields']['text']['stringValue'])
     # print(parsedResponse['parsedQuery']['entityName'], parsedResponse['parsedQuery']['entityValue'])
+
+    if parsedResponse['queryMode'] == 'hide':
+        lastResult = getLatestTable(data['value']['fields']['uid']['stringValue'])
+        columnNameArray = parsedResponse["columnNameArray"]
+        res = changeColumnVisibility(lastResult,columnNameArray,False)
+        queryResult = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': response['searchResult'],
+            'columnNames': response['columnNames'],
+            'hiddenColumnNames':res[0],
+            'indexHiddenColumnNames':res[1]
+            'text' : 'Response after hiding mentioned parametres'
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
+
+    if parsedResponse['queryMode'] == 'show':
+        lastResult = getLatestTable(data['value']['fields']['uid']['stringValue'])
+        columnNameArray = parsedResponse["columnNameArray"]
+        res = changeColumnVisibility(lastResult,columnNameArray,True)
+        queryResult = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': response['searchResult'],
+            'columnNames': response['columnNames'],
+            'hiddenColumnNames':res[0],
+            'indexHiddenColumnNames':res[1]
+            'text' : 'Response after hiding mentioned parametres'
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
     
     if parsedResponse['queryMode'] == 'help':
         response = {
@@ -349,13 +387,13 @@ def parseUserQuery(data, context):
         
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
         updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
-        doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
-        print(type(doc_temp['searchResult']))
+        #doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
+        #print(type(doc_temp['searchResult']))
         #tempSR=doc_temp['searchResult']
         #tempdfSR=dict2df(tempSR)
         
         #print(type(tempdfSR))
-        print(doc_temp['botReply'])
+        #print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)
         queryFilePath = os.path.join(tempdir, '{}_master.csv'.format(str(int(time.time()))))
