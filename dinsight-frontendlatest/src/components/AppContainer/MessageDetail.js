@@ -9,14 +9,39 @@ class MessageDetail extends React.Component{
     renderChild = () => {
         // console.log(this.props)
         if(this.props.searchResult){
+            const columns=this.props.columnNames;
+            if(this.props.indexHiddenColumnNames)
+            var hiddenIndices=this.props.indexHiddenColumnNames;
+            
+            
+            var vis=[]
+ 
+ 
+            for(var i=0;i<columns.length;i++)
+            vis[i]=1
+            if(this.props.indexHiddenColumnNames)
+            for(var i=0;i<hiddenIndices.length;i++)
+            vis[hiddenIndices[i]]=0
+            var conditionalData=[]
+            
+          
+            for(var i in this.props.searchResult)
+            {
+                var crow=[]
+                for(var j=0;j<this.props.searchResult[i].length;j++)
+                {
+                    
+                    if(vis[j]==1)
+                    crow.push(this.props.searchResult[i][j])
 
-            const data = []
+                }
 
-            for(const key in this.props.searchResult)data.push(this.props.searchResult[key])
-
+                conditionalData.push(crow);
+            }
+        
             
 
-            const dataColumns = data[0].map(label => {
+            const dataColumns = conditionalData[0].map(label => {
                 return {
                     label,
                     field : label,
@@ -24,7 +49,7 @@ class MessageDetail extends React.Component{
                 }
             });
         
-            const dataRows =  data.slice(1)
+            const dataRows =  conditionalData.slice(1)
             .map((row) => {
                 const tuple = {}
                 
