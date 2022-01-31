@@ -16,6 +16,7 @@ import re
 import numpy as np
 from queryParsing import *
 from utils import *
+from LastResultProcessing import *
 from columnMapping import columnMapping
 from quickSearch import createQSR
 from pandasql import sqldf
@@ -350,10 +351,10 @@ def parseUserQuery(data, context):
         updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
         doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
         print(type(doc_temp['searchResult']))
-        tempSR=doc_temp['searchResult']
-        tempdfSR=dict2df(tempSR)
+        #tempSR=doc_temp['searchResult']
+        #tempdfSR=dict2df(tempSR)
         
-        print(type(tempdfSR))
+        #print(type(tempdfSR))
         print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)
