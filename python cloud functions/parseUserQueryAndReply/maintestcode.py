@@ -15,7 +15,7 @@ import tempfile
 import re
 import numpy as np
 from queryParsing import queryParsing
-from columnMapping import columnMapping
+import columnMappingL as columnMapping
 import json
 
 print(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
@@ -24,7 +24,7 @@ tempdir = tempfile.mkdtemp()
 
 
 DEFAULTS = {
-    'color' : ['d', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'fc', 'n', 'd-','e-', 'f-', 'g-', 'h-', 'h+', 'e+', 'f+', 'g+', 'i+', 'i-', 'j-','j+', 'k+', 'k-', 'm+', 'l-', 'n+'],
+    'color' : ['d', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'fc', 'n','d+', 'd-','e-', 'f-', 'g-', 'h-', 'h+', 'e+', 'f+', 'g+', 'i+', 'i-', 'j-','j+', 'k+', 'k-', 'm+', 'l-', 'n+'],
     'shape' : ['round','pear','oval','emerald','heart','princess','marquise','cushion','radiant','asscher','cushion br'],
     'polish' : ['ex', 'vg', 'g'],
     'cut' : ['ex', 'vg', 'g', '-'],
@@ -74,7 +74,7 @@ def getFilteredData(df, conditions):
     cut = conditions.get('cut', DEFAULTS['cut'])
     symn = conditions.get('sym', DEFAULTS['symn'])
     cert = conditions.get('cert', DEFAULTS['cert'])
-    fluor = conditions.get('flour', DEFAULTS['fluor'])
+    fluor = conditions.get('fluor', DEFAULTS['fluor'])
     purity = conditions.get('clarity', DEFAULTS['purity'])
     size = conditions.get('size', DEFAULTS['size'])
    
@@ -110,10 +110,10 @@ def parseUserQuery(data, context):
     conditions = {key:values[i] for i,key in enumerate(attrs)}
     
     if 'shape' in conditions.keys():
-        conditions['shape'] = [columnMapping.getActualShape_(shape).lower() for shape in conditions['shape']]
+        conditions['shape'] = [columnMapping.getActualShape(shape).lower() for shape in conditions['shape']]
         
-    if 'flour' in conditions.keys():
-        conditions['flour'] = [columnMapping.getActualFlour_(flour).lower() for flour in conditions['flour']]
+    if 'fluor' in conditions.keys():
+        conditions['fluor'] = [columnMapping.getActualFluor(fluor).lower() for fluor in conditions['fluor']]
     if 'size' in conditions.keys():
         if len(conditions['size'])==1:
             temp=conditions['size'][0]
@@ -123,7 +123,8 @@ def parseUserQuery(data, context):
             mex=max(conditions['size'][0],conditions['size'][1])
             conditions['size'][0]=men
             conditions['size'][1]=mex
-
+    if 'color' in conditions.keys():
+        conditions['color'] = [columnMapping.getActualColor(color).lower() for color in conditions['color']]
     print(conditions)
     
     # conditions = extractConditions(data['value']['fields']['text']['stringValue'])

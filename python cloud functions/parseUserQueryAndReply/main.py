@@ -15,12 +15,11 @@ import tempfile
 import re
 import numpy as np
 from queryParsing import *
+from utils import *
 from columnMapping import columnMapping
 from quickSearch import createQSR
 from pandasql import sqldf
 import json
-from LastResultProcessing import *
-from utils import *
 
 tempdir = tempfile.mkdtemp()
 client = storage.Client(project="kp-assist")
@@ -64,7 +63,6 @@ def get_master_file_path():
 
 def downloadFromBucket(bucketName, path, filepath):
     bucket = client.get_bucket(bucketName)
-    
     blob = bucket.blob(path)
     doesFileExist = blob.exists()
     
@@ -81,7 +79,7 @@ def uploadToBucket(bucketName, path, filepath):
     with open(filepath, 'rb') as file:
         blob.upload_from_file(file)
 
-    blob.make_public()       
+    blob.make_public()     
   
 def getCondition(line):
     line = re.sub(r'\s', r':', line)
@@ -95,9 +93,9 @@ def getCondition(line):
     return filters    
     
 def addReplyToFirestore(collectionPath, doc):
-    collection_ref = db.collection(collectionPath)    
+    collection_ref = db.collection(collectionPath)
+    
     collection_ref.add(doc)
-
 def updateFirestore(uidd,dc1):
       doc_ref=db.collection('lastResInfo').document(uidd)
       doc_ref.set(dc1)
@@ -135,7 +133,7 @@ def getFilteredData(df, conditions):
         df['Fluor'].str.lower().isin(fluor) &
         df['Purity'].str.lower().isin(purity) &
         df['Weight'].between(size[0], size[1])
-    ]    
+    ]   
 
 def parseUserQuery(data, context):
     if data['value']['fields']['botReply']['booleanValue']:
@@ -255,7 +253,7 @@ def parseUserQuery(data, context):
                 conditions['size'][0]=men
                 conditions['size'][1]=mex
 
-        print("Condition",conditions)
+        print(conditions)
         
         # conditions = extractConditions(data['value']['fields']['text']['stringValue'])
 
@@ -317,17 +315,17 @@ def parseUserQuery(data, context):
         if dfTemp['Size'].dtype != np.float64:
             dfTemp['Size'] = dfTemp['Size'].apply(lambda cell : float(cell.split(' ')[0]))
 
-        #print(1)
+        print(1)
         result = getFilteredData(dfTemp, conditions)
         # return result
-        #print(2)
+        print(2)
         columnNames = np.array([dfTemp.columns.tolist()])
         cols=dfTemp.columns.tolist()
-        #print('columnNames',type(columnNames))
-        #print('cols',type(cols))
+        print('columnNames',type(columnNames))
+        print('cols',type(cols))
         rows=result.iloc[:100].to_numpy()
         emptyArray=np.concatenate((columnNames,rows),axis=0)
-        #print(3)
+        print(3)
         searchResult = dict()
         
         for i in range(emptyArray.shape[0]):
@@ -346,16 +344,16 @@ def parseUserQuery(data, context):
             'text' : 'This is a preview of Original Result.\n We have retrieved {} rows'.format(result.shape[0])
         }
 
-        #print(4)
+        print(4)
         
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
         updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
         doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
-        #print(type(doc_temp['searchResult']))
+        print(type(doc_temp['searchResult']))
         tempSR=doc_temp['searchResult']
-        #tempdfSR=dict2df(tempSR)
+        tempdfSR=dict2df(tempSR)
         
-        #print(type(tempdfSR))
+        print(type(tempdfSR))
         print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)

@@ -58,7 +58,7 @@ def createQSR(rows):
     colorVal = ['D E F', 'G H', 'I J', 'K L M N']
     clarityVal = ['IF', 'VVS', 'VS', 'SI', 'I']
     caratVal = ['0.18 to 0.45', '0.46 to 0.95', '0.96 to 1.45', '1.46 to 10.0']
-    colorValSearch = ['D  F', 'G H', 'I J', 'K N']
+    colorValSearch = ['D E F', 'G H', 'I J', 'K L M N']
     clarityValSearch = ['FL IF ', 'VVS1 VVS2', 'VS1 VS2', 'SI1 SI2', 'I1 I3']
     caratValSearch = ['0.18 0.45', '0.46 0.95', '0.96 1.45', '1.46  10.0']
     caratActualVal = [0.18, 0.46, 0.96, 10.0]
