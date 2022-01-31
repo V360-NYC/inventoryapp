@@ -15,11 +15,12 @@ import tempfile
 import re
 import numpy as np
 from queryParsing import *
-# from queryParsing import queryParsing
 from columnMapping import columnMapping
 from quickSearch import createQSR
 from pandasql import sqldf
 import json
+from LastResultProcessing import *
+from utils import *
 
 tempdir = tempfile.mkdtemp()
 client = storage.Client(project="kp-assist")
@@ -58,16 +59,8 @@ CATEGORICAL_COLUMNS = [
     'originCountry',
 ]
 
-def get_master_file_path(uid):
-    collection_ref = db.collection('/'.join(['userFiles', uid, 'masterFiles'])).order_by('createdAt', direction=firestore.Query.DESCENDING)
-    
-    docs = collection_ref.get()
-    # print(docs)
-    if len(docs) > 0:
-        return docs[0].to_dict()['filePath']
-        
-    raise Exception('remote master not found')
-
+def get_master_file_path():
+    return 'master.xlsx'
 
 def downloadFromBucket(bucketName, path, filepath):
     bucket = client.get_bucket(bucketName)
@@ -88,8 +81,7 @@ def uploadToBucket(bucketName, path, filepath):
     with open(filepath, 'rb') as file:
         blob.upload_from_file(file)
 
-    blob.make_public()
-       
+    blob.make_public()       
   
 def getCondition(line):
     line = re.sub(r'\s', r':', line)
@@ -100,18 +92,15 @@ def getCondition(line):
     
     for i in range(0,len(matches), 2):
       filters[matches[i]] = matches[i + 1]
-    return filters
-    
-    
+    return filters    
     
 def addReplyToFirestore(collectionPath, doc):
-    collection_ref = db.collection(collectionPath)
-    
+    collection_ref = db.collection(collectionPath)    
     collection_ref.add(doc)
+
 def updateFirestore(uidd,dc1):
       doc_ref=db.collection('lastResInfo').document(uidd)
       doc_ref.set(dc1)
-
 
 def getLatestTable(uidd):
     doc_ref=db.collection('lastResInfo').document(uidd)
@@ -146,9 +135,7 @@ def getFilteredData(df, conditions):
         df['Fluor'].str.lower().isin(fluor) &
         df['Purity'].str.lower().isin(purity) &
         df['Weight'].between(size[0], size[1])
-    ]
-    
-    
+    ]    
 
 def parseUserQuery(data, context):
     if data['value']['fields']['botReply']['booleanValue']:
@@ -186,7 +173,7 @@ def parseUserQuery(data, context):
         
         masterFilePath = None
         try:
-            masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
+            masterFilePath = get_master_file_path()
         except Exception as e:
             print(e)
             queryResult = {
@@ -268,7 +255,7 @@ def parseUserQuery(data, context):
                 conditions['size'][0]=men
                 conditions['size'][1]=mex
 
-        print(conditions)
+        print("Condition",conditions)
         
         # conditions = extractConditions(data['value']['fields']['text']['stringValue'])
 
@@ -286,7 +273,7 @@ def parseUserQuery(data, context):
         
         masterFilePath = None
         try:
-            masterFilePath = get_master_file_path(data['value']['fields']['uid']['stringValue'])
+            masterFilePath = get_master_file_path()
         except Exception as e:
             print(e)
             queryResult = {
@@ -330,19 +317,23 @@ def parseUserQuery(data, context):
         if dfTemp['Size'].dtype != np.float64:
             dfTemp['Size'] = dfTemp['Size'].apply(lambda cell : float(cell.split(' ')[0]))
 
-        print(1)
+        #print(1)
         result = getFilteredData(dfTemp, conditions)
-        print(2)
+        # return result
+        #print(2)
         columnNames = np.array([dfTemp.columns.tolist()])
+        cols=dfTemp.columns.tolist()
+        #print('columnNames',type(columnNames))
+        #print('cols',type(cols))
         rows=result.iloc[:100].to_numpy()
         emptyArray=np.concatenate((columnNames,rows),axis=0)
-        print(3)
+        #print(3)
         searchResult = dict()
         
         for i in range(emptyArray.shape[0]):
             searchResult[str(i)] = emptyArray[i].tolist()
             
-            
+        hiddenColumnNames=[]    
         # print(result.shape)
         queryResult = {
             'botReply' : True,
@@ -350,27 +341,30 @@ def parseUserQuery(data, context):
             'name' : 'message from system',
             'photoUrl' : '/images/logo.png',
             'searchResult': searchResult,
+            'columnNames': cols,
+            'hiddenColumnNames':hiddenColumnNames,
             'text' : 'This is a preview of Original Result.\n We have retrieved {} rows'.format(result.shape[0])
         }
 
-        print(4)
+        #print(4)
         
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
         updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
         doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
         #print(type(doc_temp['searchResult']))
-        #tempSR=doc_temp['searchResult']
+        tempSR=doc_temp['searchResult']
         #tempdfSR=dict2df(tempSR)
         
         #print(type(tempdfSR))
-        #print(doc_temp['botReply'])
+        print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)
         queryFilePath = os.path.join(tempdir, '{}_master.csv'.format(str(int(time.time()))))
         
         result.to_csv(queryFilePath, index = False)
         
-        params = masterFilePath.split('/')[:-1]
+        params=[]
+        params.append(data['value']['fields']['uid']['stringValue'])
         params.append('{}_master.csv'.format(str(int(time.time()))))
         masterFilePath = '/'.join(params)
         
@@ -401,4 +395,3 @@ def parseUserQuery(data, context):
             'text' : 'Sorry, We are unable to understand your message. Please try again !'
         }
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), response)
-    return result

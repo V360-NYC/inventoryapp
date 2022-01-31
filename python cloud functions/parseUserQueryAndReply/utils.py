@@ -1,5 +1,12 @@
 #can be optimize using pandas inbuilt
 import pandas as pd
+
+def dict2df(searchResult):
+    data=[searchResult[str(a)] for a in range(1,len(searchResult))]
+    df=pd.DataFrame.from_dict(data)
+    df.columns=searchResult['0']
+    return df
+    
 def ChangeRateUS(df,percent,constDollar):
     #print(df[['Total','Per','Price/Cts']])
     rateMultiplier = 1.0 + percent*1.0/100

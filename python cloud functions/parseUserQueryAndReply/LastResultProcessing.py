@@ -2,12 +2,6 @@ from queryParsing import *
 from utils import *
 import pandas as pd
 
-def dict2df(searchResult):
-    data=[searchResult[str(a)] for a in range(1,len(searchResult))]
-    df=pd.DataFrame.from_dict(data)
-    df.columns=searchResult['0']
-    return df
-
 def changeColumnVisibility(lastResult,uid, queryMode, ts, columnNameArray, showBool):
     shownColumnName = lastResult["columnName"]
     newShownColumnName = []

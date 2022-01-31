@@ -51,7 +51,7 @@ class TestFunctions(unittest.TestCase):
             self.master['Shape'].str.lower().isin(['round', 'oval']) 
         ]
         
-        self.data['value']['fields']['text']['stringValue'] = "G H I3 0.96 1.45 3282 5248"
+        self.data['value']['fields']['text']['stringValue'] = "rd oval def"
         
         result = parseUserQuery(self.data, self.event)
         
