@@ -15,7 +15,8 @@ import tempfile
 import re
 import numpy as np
 from queryParsing import *
-# from queryParsing import queryParsing
+from utils import *
+from LastResultProcessing import *
 from columnMapping import columnMapping
 from quickSearch import createQSR
 from pandasql import sqldf
@@ -59,14 +60,10 @@ CATEGORICAL_COLUMNS = [
 ]
 
 def get_master_file_path():
-    
     return 'master.xlsx'
-
-
 
 def downloadFromBucket(bucketName, path, filepath):
     bucket = client.get_bucket(bucketName)
-    
     blob = bucket.blob(path)
     doesFileExist = blob.exists()
     
@@ -83,8 +80,7 @@ def uploadToBucket(bucketName, path, filepath):
     with open(filepath, 'rb') as file:
         blob.upload_from_file(file)
 
-    blob.make_public()
-       
+    blob.make_public()     
   
 def getCondition(line):
     line = re.sub(r'\s', r':', line)
@@ -95,18 +91,15 @@ def getCondition(line):
     
     for i in range(0,len(matches), 2):
       filters[matches[i]] = matches[i + 1]
-    return filters
-    
-    
+    return filters    
     
 def addReplyToFirestore(collectionPath, doc):
     collection_ref = db.collection(collectionPath)
-    
     collection_ref.add(doc)
+
 def updateFirestore(uidd,dc1):
       doc_ref=db.collection('lastResInfo').document(uidd)
       doc_ref.set(dc1)
-
 
 def getLatestTable(uidd):
     doc_ref=db.collection('lastResInfo').document(uidd)
@@ -116,16 +109,6 @@ def getLatestTable(uidd):
 
 def extractConditions(textInput):
     return json.loads(textInput)
-    
-def dict2df(searchResult):
-    print(len(searchResult))
-    print(searchResult['0'])
-    print(searchResult['1'])
-    data=[searchResult[str(a)] for a in range(1,len(searchResult))]
-    df=pd.DataFrame.from_dict(data)
-    df.columns=searchResult['0']
-    print(type(df))
-    return df
 
 def getFilteredData(df, conditions):
     color = conditions.get('color', DEFAULTS['color'])
@@ -151,9 +134,7 @@ def getFilteredData(df, conditions):
         df['Fluor'].str.lower().isin(fluor) &
         df['Purity'].str.lower().isin(purity) &
         df['Weight'].between(size[0], size[1])
-    ]
-    
-    
+    ]   
 
 def parseUserQuery(data, context):
     if data['value']['fields']['botReply']['booleanValue']:
@@ -161,6 +142,44 @@ def parseUserQuery(data, context):
 
     parsedResponse=parseUserRequest(data['value']['fields']['text']['stringValue'])
     # print(parsedResponse['parsedQuery']['entityName'], parsedResponse['parsedQuery']['entityValue'])
+
+    if parsedResponse['queryMode'] == 'hide':
+        lastResult = getLatestTable(data['value']['fields']['uid']['stringValue'])
+        columnNameArray = parsedResponse["columnNameArray"]
+        res = changeColumnVisibility(lastResult,columnNameArray,False)
+        queryResult = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': response['searchResult'],
+            'columnNames': response['columnNames'],
+            'hiddenColumnNames':res[0],
+            'indexHiddenColumnNames':res[1]
+            'text' : 'Response after hiding mentioned parametres'
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
+
+    if parsedResponse['queryMode'] == 'show':
+        lastResult = getLatestTable(data['value']['fields']['uid']['stringValue'])
+        columnNameArray = parsedResponse["columnNameArray"]
+        res = changeColumnVisibility(lastResult,columnNameArray,True)
+        queryResult = {
+            'botReply' : True,
+            'timeStamp' : int(time.time()*1000),
+            'name' : 'message from system',
+            'photoUrl' : '/images/logo.png',
+            'searchResult': response['searchResult'],
+            'columnNames': response['columnNames'],
+            'hiddenColumnNames':res[0],
+            'indexHiddenColumnNames':res[1]
+            'text' : 'Response after hiding mentioned parametres'
+        }
+        
+        addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
+        updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
     
     if parsedResponse['queryMode'] == 'help':
         response = {
@@ -368,13 +387,13 @@ def parseUserQuery(data, context):
         
         addReplyToFirestore('chats/{}/messages'.format(data['value']['fields']['uid']['stringValue']), queryResult)
         updateFirestore(data['value']['fields']['uid']['stringValue'],queryResult)
-        doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
-        print(type(doc_temp['searchResult']))
-        tempSR=doc_temp['searchResult']
-        tempdfSR=dict2df(tempSR)
+        #doc_temp=getLatestTable(data['value']['fields']['uid']['stringValue'])
+        #print(type(doc_temp['searchResult']))
+        #tempSR=doc_temp['searchResult']
+        #tempdfSR=dict2df(tempSR)
         
-        print(type(tempdfSR))
-        print(doc_temp['botReply'])
+        #print(type(tempdfSR))
+        #print(doc_temp['botReply'])
         # print(5)
         # print(queryResult)
         queryFilePath = os.path.join(tempdir, '{}_master.csv'.format(str(int(time.time()))))
