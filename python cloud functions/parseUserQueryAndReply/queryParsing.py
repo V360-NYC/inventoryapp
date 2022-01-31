@@ -755,7 +755,7 @@ def parseUserRequest(userRequest):
 
 	parsedQuery = queryParser_(userRequest)
 	if len(parsedQuery["entityName"]) == 0:
-		p = re.compile(r"([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)", re.IGNORECASE)
+		"""p = re.compile(r"([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)", re.IGNORECASE)
 		emailAddr = findall(p,userRequest)
 		if indexOf(userRequest,'mail') != -1 or len(emailAddr)>0:
 			userMessage = ''
@@ -765,7 +765,7 @@ def parseUserRequest(userRequest):
 			 "email": emailAddr[0],
 			 "userMessage": userMessage,
 			 "queryMode": 'email'
-		 	}
+		 	}"""
 
 		if parsedQuery["percent"]>0.0:
 			#Add only dollar value for const addition
@@ -784,10 +784,10 @@ def parseUserRequest(userRequest):
 	whereClause = createWhereClause_(parsedQuery)
 	simpleQuery = createSimpleQuery_(whereClause, parsedQuery)
 	return {
-	"condition": parseQueryToText(parsedQuery),
-	"parsedQuery": parsedQuery,
-	"query": simpleQuery["query"],
-	"queryMode": 'btQuery'
+		"condition": parseQueryToText(parsedQuery),
+		"parsedQuery": parsedQuery,
+		"query": simpleQuery["query"],
+		"queryMode": 'btQuery'
 	}
 
 def testcreateWhereClause_(userMessage):

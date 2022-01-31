@@ -30,12 +30,19 @@ def ParseBQResultAndCreateArray(df,shownColumnName):
             values = []
             for j in range(len(headerRow)):
                 if df[headerRow[j]][i]:
-                    values.append(df[headerRow[j]][i])
+                    if type(df[headerRow[j]][i]) in [float,str,int]:
+                        values.append(df[headerRow[j]][i])
+                    else:
+                        values.append(df[headerRow[j]][i].item())
                 else:
                     values.append("NA")
             data.append(values)
         #print(data)
-    return data
+    dictionary = dict()
+    dictionary['0'] = shownColumnName
+    for i in range(len(data)):
+        dictionary[str(i+1)] = data[i]
+    return dictionary
 
 def dataframeToDictionary(df):
     dictionary = dict()
