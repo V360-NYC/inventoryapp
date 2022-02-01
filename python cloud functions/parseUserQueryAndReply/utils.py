@@ -39,9 +39,9 @@ def ParseBQResultAndCreateArray(df,shownColumnName):
             data.append(values)
         #print(data)
     dictionary = dict()
-    dictionary['0'] = shownColumnName
+    #dictionary['0'] = shownColumnName
     for i in range(len(data)):
-        dictionary[str(i+1)] = data[i]
+        dictionary[str(i)] = data[i]
     return dictionary
 
 def dataframeToDictionary(df):
