@@ -767,7 +767,7 @@ def parseUserRequest(userRequest):
 			 "queryMode": 'email'
 		 	}"""
 
-		if parsedQuery["percent"]>0.0:
+		if parsedQuery["percent"]!=0.0:
 			#Add only dollar value for const addition
 			return {
 			 "percent": parsedQuery["percent"],
