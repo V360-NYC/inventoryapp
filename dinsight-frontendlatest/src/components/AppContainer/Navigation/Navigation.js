@@ -41,9 +41,9 @@ class Navigation extends Component{
                             <Nav.Link>
                                 <Link to='/' >Home</Link>
                             </Nav.Link>
-                            <Nav.Link >
+                            {/* <Nav.Link >
                                 <Link to='/inventory'>Inventory</Link>
-                            </Nav.Link>
+                            </Nav.Link> */}
                             <Nav.Link>
                                 <Link to='/analysis' >Analysis</Link>
                             </Nav.Link>
