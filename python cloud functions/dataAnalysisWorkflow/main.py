@@ -11,12 +11,11 @@ from firebase_admin import credentials, firestore
 import math
 import time
 import fnmatch
+import pickle
 
 tempdir = tempfile.gettempdir()
 cred = credentials.ApplicationDefault()
-firebase_admin.initialize_app(cred,{
-    'project_id':'kp-assist-4b13d9b7e9e5'
-})
+firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 tempdir = tempfile.mkdtemp()
@@ -60,7 +59,7 @@ def downloadFromBucket(bucketName, path, filepath):
     blob.download_to_filename(filepath)
 
 def exportDataFrameToExcel(dataframe, path):
-    dataframe.to_excel(path)
+    dataframe.to_excel(path, index = False)
 
 def read_excel(filename):
     assert filename.split('.')[-1] in ['xlsx', 'xls'] ,'Not a excel file'
@@ -75,26 +74,68 @@ def skip_to(df):
                     columns = df.iloc[index])
     raise Exception('header row not found')
 
+def mapDate(row, createdAt):
+    if row['_merge']=='left_only':
+        # old diamond ==> no change
+        return row['createdAt']
+    elif row['_merge']=='right_only':
+        return createdAt
+
+        # new diamond => first time appear
+    else:
+        return row['createdAt']
+    
+def mapDate2(row, createdAt):
+    if row['_merge']=='left_only':
+        # old diamond ==> no change
+        return row['lastModifiedAt']
+    elif row['_merge']=='right_only':
+        return createdAt
+
+        # new diamond => first time appear
+    else:
+        return createdAt     
+        # updated
 
 def map(row):
-    if math.isnan(row['Price/Cts_x']):
+    if math.isnan(row['Total_x']):
         return 'New'
-    if row['Price/Cts_x'] == row['Price/Cts_y']:
+    if row['Total_x'] == row['Total_y']:
         return 'Same'
-    if row['Price/Cts_x'] < row['Price/Cts_y']:
+    if row['Total_x'] < row['Total_y']:
         return 'Increase'
-    if row['Price/Cts_x'] > row['Price/Cts_y']:
+    if row['Total_x'] > row['Total_y']:
         return 'Decrease'
-    print(row['Price/Cts_x'] ,row['Price/Cts_y'])
+
+    # print(row['Total_x'] ,row['Total_y'])
     return 'Error'
     
-def generate_summary_file(master, inventory):
-    summary = master.merge(inventory, how='right',on='ReportNo', indicator=True)
-    summary['summary'] = summary.apply(lambda row : map(row), axis = 1)
-    summary = summary[[column for column in summary.columns if '_y' in column] + ['ReportNo', 'summary']]
-    summary = summary.rename(columns={column:column.replace("_y", "") for column in summary.columns})
+def mapDiff(row):
+    if math.isnan(row['Total_x']):
+        return 100
+    if math.isnan(row['Total_y']):
+        return 'Error'
+    if row['Total_x'] == row['Total_y']:
+        return 0
+    if row['Total_x'] < row['Total_y']:
+        return (row['Total_y']-row['Total_x'])*100/row['Total_y']
+    if row['Total_x'] > row['Total_y']:
+        return (row['Total_y']-row['Total_x'])*100/row['Total_y']
+
+    # print(row['Total_x'] ,row['Total_y'])
+    return 'Error'
     
-    return summary
+# def generate_summary_file(masterDate):
+   
+#     return summary
+
+#     print(2)
+    # summary = master.merge(inventory, how='right',on='ReportNo', indicator=True)
+    # summary['summary'] = summary.apply(lambda row : map(row), axis = 1)
+    # summary = summary[[column for column in summary.columns if '_y' in column] + ['ReportNo', 'summary']]
+    # summary = summary.rename(columns={column:column.replace("_y", "") for column in summary.columns})
+    
+    # return summary
 
 def generate_master_file(master, inventory):
     return pd.concat([master, inventory]).drop_duplicates(subset=['ReportNo'], keep = 'last')
@@ -108,21 +149,22 @@ def get_master_file_path(uid):
         
     raise Exception('remote master not found')
   
-def addSummaryFileMeta(summaryFilePath, uid):
+def addSummaryFileMeta(summaryFilePath, uid, vendorName):
   collection_ref = db.collection('/'.join(['userFiles', uid, 'summaryFiles']))
 
   data = {
     'filePath' : summaryFilePath,
     'bucket' : summary_bucket,
-    'createdAt' : datetime.now(),
+    'createdAt' :datetime.now(),
     'downloadURL' : '/'.join(['https://storage.googleapis.com',summary_bucket, summaryFilePath]),
-    'ack' : False
+    'ack' : False,
+    'vendorName' : vendorName
   }
 
   collection_ref.add(data)
 
 
-def addMasterFileMeta(newMasterFilePath, uid):
+def addMasterFileMeta(newMasterFilePath, uid, vendorName):
   collection_ref = db.collection('/'.join(['userFiles', uid, 'masterFiles']))
 
   data = {
@@ -130,13 +172,24 @@ def addMasterFileMeta(newMasterFilePath, uid):
     'bucket' : master_bucket,
     'createdAt' : datetime.now(),
     'downloadURL' : '/'.join(['https://storage.googleapis.com',master_bucket, newMasterFilePath]),
-    'ack' : False
+    'ack' : False,
+    'vendorName' : vendorName
   }
 
   collection_ref.add(data)
 
+def mapVendor(row, vendorName):
+    if row['_merge']=='both':
+        return vendorName
+    elif row['_merge']=='left_only':
+        return row['vendorName_x']
+    else:
+        return vendorName  
 
-def onInventoryFileUpload(inventory, uid):
+
+def onInventoryFileUpload(inventory, uid, vendorName, createdAt):
+    inventory['vendorName'] = vendorName
+
     start_time = time.time()
     try:
         masterFilePath = get_master_file_path(uid);
@@ -146,14 +199,69 @@ def onInventoryFileUpload(inventory, uid):
             os.path.join(tempdir, 'master.xlsx')
         )
     except Exception:
-        emptyMasterFile = pd.DataFrame(columns = inventory.columns)
-        exportDataFrameToExcel(emptyMasterFile, os.path.join(tempdir, 'master.xlsx'))
+        
+        masterColumns = {}
+        for col in inventory.columns:
+            masterColumns[col] = []
 
+        for col in ['createdAt', 'lastModifiedAt']:
+            masterColumns[col] = []
+
+        emptyMasterFile = pd.DataFrame(columns = masterColumns)
+        print("new dataframe created")
+        exportDataFrameToExcel(emptyMasterFile, os.path.join(tempdir, 'master.xlsx'))
+    print(3)
     master = read_excel(os.path.join(tempdir,'master.xlsx'))
     
-    summary = generate_summary_file(master, inventory)
+    master['ReportNo'] = master['ReportNo'].astype(np.int64)
+    print(4)
+    masterDate= master.merge(inventory,how='outer',on='ReportNo',indicator=True)
+    print(5)
+    masterDate['createdAt'] = masterDate['createdAt'].astype(str)
+    masterDate['lastModifiedAt'] = masterDate['lastModifiedAt'].astype(str)
+    masterDate['createdAt'] = masterDate.apply(lambda row : mapDate(row, createdAt), axis = 1)
+    print(5.1)
+    masterDate['lastModifiedAt'] = masterDate.apply(lambda row : mapDate2(row, createdAt), axis = 1)
+    print(5.2)
     
+    print(5.3)
 
+    summary = masterDate[masterDate['_merge'] != 'left_only' ]
+
+    summary['summary'] = summary.apply(lambda row : map(row), axis = 1)
+    summary['%Change']= summary.apply(lambda row: mapDiff(row),axis=1)
+    
+    summary = summary[[column for column in summary.columns if '_y' in column] + ['ReportNo','createdAt','%Change','summary','lastModifiedAt']]
+    summary=summary.rename(columns={column:column.replace("_y", "") for column in summary.columns})
+
+    summary['ReportNoabc']=summary['ReportNo']
+    summary['%Changeabc']=summary['%Change']
+    summary['summaryabc']=summary['summary']
+    summary['VideoFullLinksabc']=summary['VideoFullLinks']
+
+    summary=summary.drop(['ReportNo','VideoFullLinks','%Change','summary'], axis = 1)
+    summary=summary[[column for column in summary.columns if 'abc' in column]+ [column for column in summary.columns if 'abc' not in column]]
+    summary=summary.rename(columns={column:column.replace("abc", "") for column in summary.columns})
+
+    print(summary.columns)
+    
+    masterDate=masterDate[[column for column in masterDate.columns if '_y' not in column]] 
+    masterDate=masterDate.rename(columns={column:column.replace("_x", "") for column in masterDate.columns})
+    print(masterDate.columns)
+
+    masterDate=pd.concat([masterDate,summary]).drop_duplicates(subset=['ReportNo'],keep='last')
+    masterDate=masterDate.drop(['summary','_merge','%Change'],axis=1)
+
+    
+    print(6)
+    masterDate['ReportNoabc']=masterDate['ReportNo']
+
+    masterDate['VideoFullLinksabc']=masterDate['VideoFullLinks']
+    masterDate=masterDate.drop(['ReportNo','VideoFullLinks'], axis = 1)
+    masterDate=masterDate[[column for column in masterDate.columns if 'abc' in column]+ [column for column in masterDate.columns if 'abc' not in column]]
+    masterDate=masterDate.rename(columns={column:column.replace("abc", "") for column in masterDate.columns})
+    
+    print(8)
     start_time = time.time()
     exportDataFrameToExcel(summary, os.path.join(tempdir, 'summary.xlsx'))
     summaryFilePath = '/'.join([uid, str(uuid.uuid4()), 'summary.xlsx'])
@@ -164,23 +272,32 @@ def onInventoryFileUpload(inventory, uid):
         os.path.join(tempdir, 'summary.xlsx')
     )
     
-    addSummaryFileMeta(summaryFilePath, uid)
-
+    addSummaryFileMeta(summaryFilePath, uid, vendorName)
+    print(9)
     start_time = time.time()
-    newMaster = generate_master_file(master, inventory)
 
-    exportDataFrameToExcel(newMaster, os.path.join(tempdir, 'master.xlsx'))
+    exportDataFrameToExcel(masterDate, os.path.join(tempdir, 'master.xlsx'))
 
-    newMasterFilePath = '/'.join([uid, str(uuid.uuid4()), 'master.xlsx'])
+    folder =  str(uuid.uuid4())
+    newMasterFilePath = '/'.join([uid, folder, 'master.xlsx'])
 
     uploadToBucket(
         master_bucket,
         newMasterFilePath,
         os.path.join(tempdir, 'master.xlsx')
     )
+
+    with open(os.path.join(tempdir, 'master.pickle'), 'wb+') as pickleFile:
+        pickle.dump(masterDate, pickleFile)
+
+    uploadToBucket(
+        master_bucket,
+        '/'.join([uid, folder, 'master.pickle']),
+        os.path.join(tempdir, 'master.pickle')
+    )
     
-    addMasterFileMeta(newMasterFilePath, uid)
-    
+    addMasterFileMeta(newMasterFilePath, uid, vendorName)
+    print(10)
     print("{} entire data analysis code took ".format(time.time() - start_time))
 
 
@@ -258,6 +375,8 @@ def hello_firestore(event, context):
         if VideoColumn !=-1:
             videoLinks= extractLinks(VideoColumn,sumRows,headerIndex)        
             df['VideoFullLinks']=videoLinks
+        else :
+            df['VideoFullLinks'] = 'None'
 
         df=df[ ~df['ReportNo'].isnull()]
         df['ReportNo']=df['ReportNo'].astype('int64')
@@ -286,8 +405,7 @@ def hello_firestore(event, context):
                     flagval=1
                 else:
                     globaldf=pd.concat([globaldf,df]).drop_duplicates(subset=['ReportNo'],keep='last')
-                
-                
+    
     def exportDataFrameToExcel(dataframe, path):
         dataframe.to_excel(path)
 
@@ -308,17 +426,22 @@ def hello_firestore(event, context):
     
     assert userId != None
 
-    uploadToBucket('dinsight-user-inventory-test', '/'.join([userId,tempuuid,'inventory.xlsx']),os.path.join(tempdir,'inventory.xlsx'))
+    uploadToBucket('business-inventory-files', '/'.join([userId,tempuuid,'inventory.xlsx']),os.path.join(tempdir,'inventory.xlsx'))
     metaData={}
-    metaData['bucket']='dinsight-inventory-files-test'
+    metaData['bucket']='business-inventory-files'
     metaData['createdAt']=datetime.fromtimestamp(int(event['value']['fields']['createdAt']['integerValue'])/1000.0)
-    metaData['downloadURL']='https://storage.googleapis.com/dinsight-user-inventory-test/'+userId+'/'+tempuuid+'/inventory.xlsx'
+    print('created at', metaData['createdAt'], type(metaData['createdAt']))
+    metaData['downloadURL']='https://storage.googleapis.com/business-inventory-files/'+userId+'/'+tempuuid+'/inventory.xlsx'
     metaData['errorList']=errorList
     metaData['filePath']=userId+'/'+tempuuid+'/inventory.xlsx'
+    metaData['vendorName'] = event['value']['fields']['vendorName']['stringValue']
     doc_ref=db.collection('userFiles').document(userId).collection('inventoryFiles').add(metaData)
     
     # start data analysis
-    onInventoryFileUpload(globaldf, userId)
+
+    createdAt = metaData['createdAt'].strftime("%d/%m/%Y")
+    print('created at 2', createdAt, type(createdAt))
+    onInventoryFileUpload(globaldf, userId, metaData['vendorName'], createdAt)
 
 
 

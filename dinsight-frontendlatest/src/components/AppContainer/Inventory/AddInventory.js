@@ -105,10 +105,9 @@ class AddInventory extends React.Component{
         const datetimeString = `${this.state.date}T${timeString}`;
         // console.log(datetimeString);
         const TIMESTAMP = new Date(datetimeString).getTime();
-        
-        // console.log(TIMESTAMP);
+        console.log(typeof(TIMESTAMP));
 
-        const BUCKET = 'fileuploadskpassist';
+        const BUCKET = 'fileuploadsbusinessassist';
         
         const BASE_DIR = `${BUCKET}/${this.props.userID}/${TIMESTAMP}`
         const files = this.state.fileInputs.map(input => {
