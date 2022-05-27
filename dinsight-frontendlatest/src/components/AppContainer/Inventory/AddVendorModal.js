@@ -6,7 +6,7 @@ import { Formik, Form, Field } from 'formik'
 
 class AddVendorModal extends React.Component{
     initialValues = {
-        vendorName : ''
+        VENDORNAME : ''
     }
 
     render(){
@@ -33,7 +33,7 @@ class AddVendorModal extends React.Component{
                                     <div className="col text-center">
                                         <label htmlFor="vendor-name">Vendor Name</label>
                                         <Field 
-                                            name="vendorName"
+                                            name="VENDORNAME"
                                             className="form-control"
                                             type="text"
                                         />

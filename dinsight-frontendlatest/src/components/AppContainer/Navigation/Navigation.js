@@ -39,11 +39,11 @@ class Navigation extends Component{
                     <Navbar.Collapse  id="responsive-navbar-nav">
                         <Nav className="mr-auto">
                             <Nav.Link>
-                                <Link to='/' >Home</Link>
+                                <Link to='/' >Inventory</Link>
                             </Nav.Link>
-                            <Nav.Link >
+                            {/* <Nav.Link >
                                 <Link to='/inventory'>Inventory</Link>
-                            </Nav.Link>
+                            </Nav.Link> */}
                             <Nav.Link>
                                 <Link to='/analysis' >Analysis</Link>
                             </Nav.Link>

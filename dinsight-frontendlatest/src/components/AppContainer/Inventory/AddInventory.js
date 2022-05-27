@@ -10,7 +10,7 @@ import createNotification from '../../util/Notification';
 import FileInput from './FileInput';
 import AddVendorModalContainer from './AddVendorModalContainer';
 import { date } from 'yup';
-import { fileUploadBucket } from '../../../config/projectconfigs';
+import Moment from 'moment';
 
 
 class AddInventory extends React.Component{
@@ -22,8 +22,8 @@ class AddInventory extends React.Component{
         description:'',
         inputDisabled : false,
         vendors : [],
-        date : '',
-        vendorName : ''
+        date : Moment().format('YYYY-MM-DD'),
+        VENDORNAME : ''
 
     }
 
@@ -106,11 +106,9 @@ class AddInventory extends React.Component{
         const datetimeString = `${this.state.date}T${timeString}`;
         // console.log(datetimeString);
         const TIMESTAMP = new Date(datetimeString).getTime();
-        
-        // console.log(TIMESTAMP);
+        console.log(typeof(TIMESTAMP));
 
-        const BUCKET = fileUploadBucket;
-        console.log(this.props.userID);
+        const BUCKET = 'fileuploadsbusinessassist';
         
         const BASE_DIR = `${BUCKET}/${this.props.userID}/${TIMESTAMP}`
         const files = this.state.fileInputs.map(input => {
@@ -134,14 +132,14 @@ class AddInventory extends React.Component{
             createNotification(`Files Uploaded`, 'success');
             const data = {
                 bucket : BUCKET,
-                createdAt : TIMESTAMP,
-                vendorName : this.state.vendorName,
+                CREATEDAT : TIMESTAMP,
+                VENDORNAME : this.state.VENDORNAME,
                 description : this.state.description
             }
             
             data.files = this.state.fileInputs.map(input => {
                 return {
-                    filePath : `${this.props.userID}/${data.createdAt}/${input.selectedFile.name}`
+                    filePath : `${this.props.userID}/${data.CREATEDAT}/${input.selectedFile.name}`
                 }
             })
             // console.log(data)
@@ -154,8 +152,8 @@ class AddInventory extends React.Component{
                 }],
                 inputDisabled : false,
                 description:'',
-                vendorName:'',
-                date : ''
+                VENDORNAME:'',
+                date : Moment().format('YYYY-MM-DD')
             })
         })
         .catch(err =>{
@@ -168,8 +166,8 @@ class AddInventory extends React.Component{
                 }],
                 inputDisabled : false,
                 description:'',
-                vendorName:'',
-                date : ''
+                VENDORNAME:'',
+                date : Moment().format('YYYY-MM-DD')
             })
         })
         
@@ -186,7 +184,7 @@ class AddInventory extends React.Component{
                         onFileSelect={this.onFileSelect}
                         removeFileInput={this.removeFileInput}
                     />
-                    <small id="fileHelp" class="form-text text-muted">Only .xlsx , .csv files are allowed</small>
+                    <small id="fileHelp" class="form-text text-muted">Only .xlsx , .csv , .xls files are allowed</small>
                 </div>
             )
         })
@@ -196,7 +194,7 @@ class AddInventory extends React.Component{
         
         const vendorList = this.state.vendors.map((vendor, index) => {
             return (
-                <option value={vendor.vendorName} key={index}>{vendor.vendorName}</option>
+                <option value={vendor.VENDORNAME} key={index}>{vendor.VENDORNAME}</option>
             )
         });
         
@@ -220,6 +218,7 @@ class AddInventory extends React.Component{
     }
     
     render(){
+        
         return (
             <div className="container p-5">
                 <form onSubmit={this.handleSubmit}>
@@ -244,12 +243,12 @@ class AddInventory extends React.Component{
                                     </div>
                                 
                                     <div className="form-group py-2 mt-3 mb-2">
-                                        <label htmlFor="vendorName">Select Vendor</label>
+                                        <label htmlFor="VENDORNAME">Select Vendor</label>
                                         <select 
                                             className='form-select'
-                                            value={this.state.vendorName}
-                                            onChange={(e) => this.setState({vendorName : e.target.value})}
-                                            id="vendorName"
+                                            value={this.state.VENDORNAME}
+                                            onChange={(e) => this.setState({VENDORNAME : e.target.value})}
+                                            id="VENDORNAME"
                                             required
                                         >
                                             {this.renderUserVendors()}

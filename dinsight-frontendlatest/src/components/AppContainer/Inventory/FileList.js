@@ -23,13 +23,13 @@ class FileList extends React.Component{
         selectedFile : null
     }
 
-    showModal = (type, createdAt, filePath) => {
+    showModal = (type, CREATEDAT, filePath) => {
 
         this.setState({
             show:true,
             selectedFile : {
                 type,
-                createdAt,
+                CREATEDAT,
                 filePath
             }
         })
@@ -45,7 +45,11 @@ class FileList extends React.Component{
             day : '2-digit',
             weekday : 'short',
             month:'long',
-            year : 'numeric'
+            year : 'numeric',
+            hour:   '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
         });
 
         const columns = [
@@ -61,8 +65,8 @@ class FileList extends React.Component{
             }
         ]
 
-        const rows = this.props.data.map(({createdAt, downloadURL, type, filePath}) => {
-            const date = new Date(createdAt.toDate());
+        const rows = this.props.data.map(({CREATEDAT, downloadURL, type, filePath}) => {
+            const date = new Date(CREATEDAT.toDate());
             return {
                 file : (
                     <>
@@ -125,7 +129,7 @@ class FileList extends React.Component{
 
     renderFileInfo = () => {
         if(this.state.selectedFile){
-            // console.log(this.state.selectedFile.type, this.state.selectedFile.createdAt)
+            // console.log(this.state.selectedFile.type, this.state.selectedFile.CREATEDAT)
             return (
                 <div className="container-fluid py-2">
                     <div className="row">
@@ -140,7 +144,7 @@ class FileList extends React.Component{
                         </div>
                         <div className="row">
                             <div className="col">
-                                Last Modified : {this.state.selectedFile.createdAt}
+                                Last Modified : {this.state.selectedFile.CREATEDAT}
                             </div>
                         </div>
                     </div>

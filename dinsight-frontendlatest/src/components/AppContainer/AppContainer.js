@@ -11,8 +11,8 @@ const AppContainer = () => {
         
         <BrowserRouter>
             <Navigation />
-            <Route exact path='/' component={Messenger } />
-            <Route exact path='/inventory' component={AddInventory} />
+            {/* <Route exact path='/' component={Messenger } /> */}
+            <Route exact path='/' component={AddInventory} />
             <Route exact path='/analysis' component={Analysis} />
         </BrowserRouter>
         </>

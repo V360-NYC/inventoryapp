@@ -7,13 +7,13 @@ import FileList from './FileList';
 class DisplayInventory extends React.Component{
     
     getFiles = (data, type) => {
-       return this.props[data].map(({createdAt, filePath, downloadURL, vendorName}) => {
+       return this.props[data].map(({CREATEDAT, filePath, downloadURL, VENDORNAME}) => {
            return {
                filePath,
                downloadURL,
-               createdAt,
+               CREATEDAT,
                type,
-               vendorName
+               VENDORNAME
            }
        });
    }

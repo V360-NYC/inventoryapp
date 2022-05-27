@@ -23,13 +23,13 @@ class VendorFileList extends React.Component{
         selectedFile : null
     }
 
-    showModal = (type, createdAt, filePath) => {
+    showModal = (type, CREATEDAT, filePath) => {
 
         this.setState({
             show:true,
             selectedFile : {
                 type,
-                createdAt,
+                CREATEDAT,
                 filePath
             }
         })
@@ -45,7 +45,11 @@ class VendorFileList extends React.Component{
             day : '2-digit',
             weekday : 'short',
             month:'long',
-            year : 'numeric'
+            year : 'numeric',
+            hour:   '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
         });
 
         const columns = [
@@ -61,12 +65,14 @@ class VendorFileList extends React.Component{
             }
         ]
 
-        const rows = data.map(({createdAt, downloadURL, type, filePath}) => {
-            const date = new Date(createdAt.toDate());
+        const rows = data.map(({CREATEDAT, downloadURL, type, filePath}) => {
+            const date = new Date(CREATEDAT.toDate());
+            console.log(typeof(date))
             return {
                 file : (
                     <>
-                        <FontAwesomeIcon icon={faFileExcel} size='2x' style={{color:'gray'}}/> {'\u00A0'}{'\u00A0'} {datetimeConstructor.format(date)}
+                        <FontAwesomeIcon icon={faFileExcel} size='2x' style={{color:'gray'}}/> {'\u00A0'}{'\u00A0'} 
+                        {date.toLocaleString()}
                     </>
                 ),
                 action : (
@@ -113,9 +119,9 @@ class VendorFileList extends React.Component{
             const groupedData = new Map();
             this.props.data.forEach(item => {
                 console.log(item);
-                const collection = groupedData.get(item.vendorName) || [];
+                const collection = groupedData.get(item.VENDORNAME) || [];
                 collection.push(item);
-                groupedData.set(item.vendorName, collection);
+                groupedData.set(item.VENDORNAME, collection);
             });
 
             const output =  [];
@@ -151,7 +157,7 @@ class VendorFileList extends React.Component{
 
     renderFileInfo = () => {
         if(this.state.selectedFile){
-            // console.log(this.state.selectedFile.type, this.state.selectedFile.createdAt)
+            // console.log(this.state.selectedFile.type, this.state.selectedFile.CREATEDAT)
             return (
                 <div className="container-fluid py-2">
                     <div className="row">
@@ -166,7 +172,7 @@ class VendorFileList extends React.Component{
                         </div>
                         <div className="row">
                             <div className="col">
-                                Last Modified : {this.state.selectedFile.createdAt}
+                                Last Modified : {this.state.selectedFile.CREATEDAT}
                             </div>
                         </div>
                     </div>
