@@ -10,6 +10,7 @@ import createNotification from '../../util/Notification';
 import FileInput from './FileInput';
 import AddVendorModalContainer from './AddVendorModalContainer';
 import { date } from 'yup';
+import { fileUploadBucket } from '../../../config/projectconfigs';
 
 
 class AddInventory extends React.Component{
@@ -108,7 +109,8 @@ class AddInventory extends React.Component{
         
         // console.log(TIMESTAMP);
 
-        const BUCKET = 'fileuploadskpassist';
+        const BUCKET = fileUploadBucket;
+        console.log(this.props.userID);
         
         const BASE_DIR = `${BUCKET}/${this.props.userID}/${TIMESTAMP}`
         const files = this.state.fileInputs.map(input => {
