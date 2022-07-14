@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { Formik, Form, Field } from 'formik'
-
+import '../../../assets/css/Messenger.css'
 
 
 class AddVendorModal extends React.Component{

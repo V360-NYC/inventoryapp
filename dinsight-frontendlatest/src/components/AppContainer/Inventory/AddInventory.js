@@ -10,6 +10,7 @@ import createNotification from '../../util/Notification';
 import FileInput from './FileInput';
 import AddVendorModalContainer from './AddVendorModalContainer';
 import { date } from 'yup';
+import '../../../assets/css/Messenger.css'
 
 
 class AddInventory extends React.Component{
@@ -177,7 +178,7 @@ class AddInventory extends React.Component{
         return this.state.fileInputs.map(({id, selectedFile}, index) => {
             return (
                 <div className="form-group mx-2 mt-3 mb-2 pt-3 pb-3">
-                    <label htmlFor={id}>Select your inventory file</label>
+                    <label htmlFor={id} className='text-style'>Select your inventory file</label>
                     <FileInput 
                         id={id} 
                         onFileSelect={this.onFileSelect}
@@ -229,7 +230,7 @@ class AddInventory extends React.Component{
                         <div className="col-12 col-sm-12 col-md-12 col-lg-6 text-center">
                             
                                     <div className="form-group py-2 mt-3 mb-2">
-                                        <label htmlFor="date">Enter Date</label>
+                                        <label htmlFor="date" className='text-style'>Enter Date</label>
                                         <input 
                                             type="date" 
                                             className="form-control"
@@ -241,7 +242,7 @@ class AddInventory extends React.Component{
                                     </div>
                                 
                                     <div className="form-group py-2 mt-3 mb-2">
-                                        <label htmlFor="vendorName">Select Vendor</label>
+                                        <label htmlFor="vendorName" className='text-style'>Select Vendor</label>
                                         <select 
                                             className='form-select'
                                             value={this.state.vendorName}
@@ -263,10 +264,10 @@ class AddInventory extends React.Component{
                             
                                 {this.renderFileInputs()}
                                 <div className="form-group mx-2 mt-3 mb-2 pt-3 pb-3">
-                                    <button className="btn btn-outline" onClick={this.addFileInput} disabled={this.state.disabled} type="button">Select More Files</button>
+                                    <button className="btn btn-outline button-style" style={{backgroundColor: '#db4437'}} onClick={this.addFileInput} disabled={this.state.disabled} type="button">Select More Files</button>
                                 </div>
                                 <div className="form-group mx-2 mt-2 mb-3 pt-3 pb-3">
-                                    <label htmlFor="description">Description</label>
+                                    <label htmlFor="description" className='text-style'>Description</label>
                                     <textarea 
                                         id="description" 
                                         className="form-control"
@@ -275,7 +276,7 @@ class AddInventory extends React.Component{
                                     ></textarea>
                                 </div>
                                 <div className="form-group mx-2 mt-2 mb-3 pt-2 pb-3">
-                                    <button className="btn btn-success" disabled={this.state.inputDisabled}>
+                                    <button className="btn button-style" disabled={this.state.inputDisabled} style={{backgroundColor:'#0f9d58'}}>
                                         <FontAwesomeIcon icon={faFileExcel} size='2x'></FontAwesomeIcon> {'\u00A0'}{'\u00A0'}Upload
                                     </button>
                                 </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import AddVendorModal from './AddVendorModal';
-
+import '../../../assets/css/Messenger.css'
 import {postQuery} from '../../util/firebase-firestore';
 
 class AddVendorModalContainer extends React.Component{
@@ -28,7 +28,7 @@ class AddVendorModalContainer extends React.Component{
                     handleSubmit={this.handleSubmit}
                     show={this.state.show}
                 />
-                <button className="btn btn-primary" onClick={() => this.setState({show : true})}>Add new Vendor</button>
+                <button style={{backgroundColor:'#4285f4'}} className="btn button-style" onClick={() => this.setState({show : true})}>Add new Vendor</button>
             </>
         )
     }

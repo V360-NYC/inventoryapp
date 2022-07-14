@@ -1,0 +1,30 @@
+.divider{
+    display: flex;
+    height: 14px;
+    width: 100%;
+    background-color: black;
+    flex-direction: row;
+    align-items: stretch;
+}
+.navbar-divider .divider{
+    height: 20px;
+}
+.box1
+{
+    background-color: #4285F4;
+    width: 25%;
+}
+.box2
+{
+    background-color: #0F9D58;
+    width: 25%;
+}
+.box3
+{
+    background-color: 	#F4B400;
+    width: 25%;
+}
+.box4{
+    background-color: #DB4437;
+    width: 25%;
+}

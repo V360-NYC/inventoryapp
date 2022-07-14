@@ -5,11 +5,13 @@ import AddInventory from './Inventory/AddInventory';
 
 import { BrowserRouter, Route } from 'react-router-dom'
 import Analysis from './Analysis/Analysis';
+import Divider from '../AppContainer/divider'
 const AppContainer = () => {
     return (
         <>
         
         <BrowserRouter>
+            <Divider/>
             <Navigation />
             {/* <Route exact path='/' component={Messenger} /> */}
             <Route exact path='/' component={AddInventory } />

@@ -11,7 +11,7 @@ import { changeAuthState } from '../../../actions';
 
 import '../../../assets/css/Navigation.css';
 import DefaultUserImage from '../../../assets/images/profile_placeholder.png';
- 
+import logo from '../../../assets/images/LOGO.png' 
 class Navigation extends Component{
 
     onSignOut = () => {
@@ -32,20 +32,21 @@ class Navigation extends Component{
 
     render = () => {
         return (
-            <Navbar collapseOnSelect expand="lg" bg="light" variant="light" id="navigation">
+            <Navbar collapseOnSelect expand="lg" bg="light" variant="light" id="navigation" style={{padding:"0"}}>
                 <div className="container">
-                    <Navbar.Brand style={{fontSize:'20px', fontWeight:'80px'}}>DInsight Messenger</Navbar.Brand>
+                    <Navbar.Brand href="https://d360.studio/" target="__blank"><img src={logo} alt="V360" style={{height:"50px", paddingBottom:"10px"}}/></Navbar.Brand>
+                    {/* <Navbar.Brand style={{fontSize:'20px', fontWeight:'80px'}}>DInsight Messenger</Navbar.Brand> */}
                     <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                     <Navbar.Collapse  id="responsive-navbar-nav">
                         <Nav className="mr-auto">
                             <Nav.Link>
-                                <Link to='/' >Home</Link>
+                                <Link to='/' style={{fontSize:"15px"}}>DInsight Messenger</Link>
                             </Nav.Link>
                             {/* <Nav.Link >
                                 <Link to='/inventory'>Inventory</Link>
                             </Nav.Link> */}
                             <Nav.Link>
-                                <Link to='/analysis' >Analysis</Link>
+                                <Link to='/analysis' style={{fontSize:"15px"}}>Analysis</Link>
                             </Nav.Link>
                         </Nav>
                         <Nav className ="ms-auto align-middle">
