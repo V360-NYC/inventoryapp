@@ -4,11 +4,11 @@
  * So that just by changing these , we can achieve the same things with a different project
  *
  */
-export const project = "applied-ai-dev";
+export const project = "BusinessAssist";
 
-export const projectId = "kp-assist";
+export const projectId = "friendlychat-bb9ff";
 
-export const fileUploadBucket = "fileuploadskpassist";
+export const fileUploadBucket = "fileuploadsbusinessassist";
 
 export const summaryBucket = "dinsight-summary-files-test";
 

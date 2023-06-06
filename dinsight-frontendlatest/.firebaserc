@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "kp-assist",
+    "default": "friendlychat-bb9ff",
     "testing": "vertical-veld-315508",
     "analysis": "friendlychat-bb9ff"
   },
@@ -32,5 +32,6 @@
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }

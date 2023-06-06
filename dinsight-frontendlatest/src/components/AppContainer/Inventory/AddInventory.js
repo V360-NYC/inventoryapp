@@ -9,7 +9,8 @@ import {uploadToStorage} from '../../util/firebase-storage';
 import createNotification from '../../util/Notification';
 import FileInput from './FileInput';
 import AddVendorModalContainer from './AddVendorModalContainer';
-import { date } from 'yup';
+import { number } from 'yup';
+// import { date } from 'yup';
 
 
 class AddInventory extends React.Component{
@@ -22,18 +23,35 @@ class AddInventory extends React.Component{
         inputDisabled : false,
         vendors : [],
         date : '',
-        vendorName : ''
+        vendorName : '',
+        mukesh: ''
 
     }
 
     
     componentDidMount = () => {
         // fetch all user vendors
+        this.getdate();
         getUserVendors(this.props.userID)
         .then(vendors => this.setState({vendors}))
         .catch(err => console.error(err));
     }
-
+    getdate=()=>{
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+        if(dd<10) {
+            dd='0'+dd
+        } 
+        
+        if(mm<10) {
+            mm='0'+mm
+        }
+        this.state.mukesh=yyyy+'-'+mm+'-'+dd;
+        // console.log(this.state.mukesh);
+        
+    }
     addFileInput = () => {
         const N = this.state.fileInputs.length;
         if(this.state.fileInputs[N - 1].selectedFile === null){
@@ -97,21 +115,24 @@ class AddInventory extends React.Component{
             second:'2-digit',
             hour12:false
         });
-
-
+        
+    
         const datetime = new Date()
         const timeString = datetimeConstructor.format(datetime);
 
-        const datetimeString = `${this.state.date}T${timeString}`;
-        // console.log(datetimeString);
+        const datetimeString = `${this.state.mukesh}T${timeString}`;
+        // console.log(datetime);
         const TIMESTAMP = new Date(datetimeString).getTime();
         console.log(typeof(TIMESTAMP));
+        console.log(TIMESTAMP);
 
         const BUCKET = 'fileuploadsbusinessassist';
-        
         const BASE_DIR = `${BUCKET}/${this.props.userID}/${TIMESTAMP}`
+        const num = "INV-"+this.state.vendorName.substring(0,3)+"-"+this.state.mukesh;
         const files = this.state.fileInputs.map(input => {
-            const filepath = `${BASE_DIR}/${input.selectedFile.name}`;
+            
+            const filepath = `${BASE_DIR}/${num}`;
+            
 
             // return new Promise((resolve, reject) => {
             //     setTimeout(resolve(), 5000);
@@ -135,10 +156,10 @@ class AddInventory extends React.Component{
                 vendorName : this.state.vendorName,
                 description : this.state.description
             }
-            
+            console.log(TIMESTAMP);
             data.files = this.state.fileInputs.map(input => {
                 return {
-                    filePath : `${this.props.userID}/${data.createdAt}/${input.selectedFile.name}`
+                    filePath : `${this.props.userID}/${data.createdAt}/${num}`
                 }
             })
             // console.log(data)
@@ -232,10 +253,13 @@ class AddInventory extends React.Component{
                                         <label htmlFor="date">Enter Date</label>
                                         <input 
                                             type="date" 
+                                            data-date-format="YYYY MM DD"
                                             className="form-control"
                                             id="date" 
-                                            value={this.state.date}
-                                            onChange={(e) => this.setState({date : e.target.value})}
+                                            min="2023-02-10"
+                                            max="2023-02-27"
+                                            value={this.state.mukesh}
+                                            onChange={(e) => this.setState({mukesh : e.target.value})}
                                             required
                                         />
                                     </div>
@@ -278,6 +302,8 @@ class AddInventory extends React.Component{
                                     <button className="btn btn-success" disabled={this.state.inputDisabled}>
                                         <FontAwesomeIcon icon={faFileExcel} size='2x'></FontAwesomeIcon> {'\u00A0'}{'\u00A0'}Upload
                                     </button>
+                                    <br></br>
+                                    
                                 </div>
                             
                         </div>

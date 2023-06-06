@@ -7,14 +7,14 @@ import 'firebase/storage';
 import 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAGomuku47SuSiujhi2lMSEcjHVPLUbB_o",
-  authDomain: "kp-assist.firebaseapp.com",
-  databaseURL: "https://kp-assist-default-rtdb.firebaseio.com",
-  projectId: "kp-assist",
-  storageBucket: "kp-assist.appspot.com",
-  messagingSenderId: "354699324913",
-  appId: "1:354699324913:web:9c804c009cf103c65a6850",
-  measurementId: "G-95R86VT0XS"
+  apiKey: "AIzaSyD9Xx6J2WHNz9vV_TWOia1TL7xhqi-jnqw",
+  authDomain: "friendlychat-bb9ff.firebaseapp.com",
+  databaseURL: "https://friendlychat-bb9ff-default-rtdb.firebaseio.com",
+  projectId: "friendlychat-bb9ff",
+  storageBucket: "friendlychat-bb9ff.appspot.com",
+  messagingSenderId: "832382376139",
+  appId: "1:832382376139:web:f55b30c7def892db5f634e",
+  measurementId: "G-72E3EDMELK"
 };
 firebase.initializeApp(firebaseConfig);
 
